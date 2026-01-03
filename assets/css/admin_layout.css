@@ -1,0 +1,111 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+a {
+    all: unset;
+}
+body {
+    background: #FAFAFA;
+    color: #111827;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 1fr 5fr;
+    height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: #fff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #E5E7EB;
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.logo i {
+    color: #3b82f6;
+    margin-right: 8px;
+}
+
+.menu li {
+    list-style: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    color: grey;
+    width: 200px;
+}
+.menu a {
+    padding: 12px;
+    display: block;
+    width: 100%;
+}
+
+.menu li i {
+    margin-right: 10px;
+}
+.menu .menu-selected {
+    background: #791326;
+    color: #fff;
+}
+.menu li.active,
+.menu li:hover {
+    background: #791326;
+    color: #fff;
+}
+
+.logout {
+    margin-top: auto;
+    padding: 12px;
+    color: #ef4444;
+    cursor: pointer;
+}
+
+/* MAIN */
+.main {
+    flex: 1;
+    padding: 20px 30px;
+}
+.title p {
+    color: #94a3b8;
+    margin-top: 6px;
+}
+/* TOPBAR */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.topbar input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #F8F8F8;
+    color: #A0AEC0;
+}
+
+.avatar {
+    border-radius: 50%;
+}
