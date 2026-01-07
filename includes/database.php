@@ -2,7 +2,7 @@
     $servername = "localhost";
     $username = "root";
     $password = ""; 
-    $dbname = "WEBMXH_Nhom06";
+    $dbname = "webmxh_nhom06";
     
    
     $conn = mysqli_connect($servername, $username, $password,$dbname);
