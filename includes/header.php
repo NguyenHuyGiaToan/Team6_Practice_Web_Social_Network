@@ -231,7 +231,7 @@ $unread_count = mysqli_fetch_assoc($noti_result)['unread'];
         <!-- Right: Saved Posts, Notifications, Avatar -->
         <div class="nav-right">
             <!-- Bài viết đã lưu -->
-            <a href="saved-posts.php" title="Bài viết đã lưu">
+            <a href="saved_posts.php" title="Bài viết đã lưu">
                 <div class="nav-icon-circle">
                     <i class="fa-solid fa-bookmark"></i>
                 </div>

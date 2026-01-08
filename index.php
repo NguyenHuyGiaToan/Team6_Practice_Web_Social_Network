@@ -18,11 +18,11 @@ mysqli_stmt_bind_param($stmt, "i", $user_id);
 mysqli_stmt_execute($stmt);
 $current_user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
-// Cập nhật session để header.php và các trang khác dùng chung (rất quan trọng!)
+// Lưu thông tin vào session để sử dụng sau này
 $_SESSION['user_fullname'] = $current_user['FullName'];
 $_SESSION['user_avatar']    = $current_user['Avatar'] ?? null;
 
-// Hàm hỗ trợ hiển thị avatar (dùng nhiều nơi)
+// Hàm hỗ trợ hiển thị avatar
 function getAvatarUrl() {
     if (!empty($_SESSION['user_avatar'])) {
         return 'uploads/avatars/' . htmlspecialchars($_SESSION['user_avatar']);
@@ -47,29 +47,33 @@ while ($row = mysqli_fetch_assoc($following_result)) {
 $following_list = implode(',', $following_ids);
 
 // 2. Lấy bài viết từ những người đang theo dõi + bản thân
+
+// Logic: (Là bài active của người mình follow) HOẶC (Là bài của chính mình dù trạng thái gì, trừ đã xóa)
 $posts_query = "
     SELECT 
-        p.PostID,
-        p.FK_UserID,
-        p.Content,
-        p.LikeCount,
-        p.CommentCount,
-        p.CreatedAt,
-        u.FullName,
-        u.Avatar,
+        p.PostID, p.FK_UserID, p.Content, p.LikeCount, p.CommentCount, p.CreatedAt, p.Status,
+        u.FullName, u.Avatar, 
         (l.FK_UserID IS NOT NULL) AS user_liked
     FROM POSTS p
     JOIN Users u ON p.FK_UserID = u.UserID
     LEFT JOIN LIKES l ON l.FK_PostID = p.PostID AND l.FK_UserID = ?
-    WHERE p.FK_UserID IN ($following_list)
-      AND p.Status = 'active'
-      AND u.Status = 'active'
-    ORDER BY p.CreatedAt DESC
+    WHERE 
+        -- Điều kiện 1: Nằm trong danh sách follow hoặc là chính mình
+        p.FK_UserID IN ($following_list) 
+        AND (
+            -- Điều kiện 2a: Nếu là bài người khác -> Phải Active
+            (p.FK_UserID != ? AND p.Status = 'active')
+            OR
+            -- Điều kiện 2b: Nếu là bài của mình -> Hiện tất cả (Active/Private) trừ Deleted
+            (p.FK_UserID = ? AND p.Status != 'deleted')
+        )
+    ORDER BY p.CreatedAt DESC 
     LIMIT 20
 ";
 
 $posts_stmt = mysqli_prepare($conn, $posts_query);
-mysqli_stmt_bind_param($posts_stmt, "i", $user_id);
+
+mysqli_stmt_bind_param($posts_stmt, "iii", $user_id, $user_id, $user_id);
 mysqli_stmt_execute($posts_stmt);
 $posts_result = mysqli_stmt_get_result($posts_stmt);
 
@@ -104,7 +108,7 @@ foreach ($posts as &$post) {
         $post['images'][] = 'uploads/posts/' . htmlspecialchars($img['ImageUrl']);
     }
 }
-unset($post); // Good practice
+unset($post); 
 
 // === GỢI Ý KẾT BẠN (RIGHT SIDEBAR) ===
 // Lấy 5 người dùng ngẫu nhiên mà current user CHƯA follow và họ cũng CHƯA follow mình
@@ -347,13 +351,14 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                 <!-- Create Post -->
                 <div class="create-post">
                     <div class="create-post-top">
-                        <img src="<?php echo getAvatarUrl(); ?>" alt="Avatar">
-                        <input type="text" class="input-mind" placeholder="Bạn đang nghĩ gì, <?php echo explode(' ', $_SESSION['user_fullname'])[0]; ?>?">
+                        <img src="<?php echo getAvatarUrl(); ?>" alt="Avatar" onclick="window.location.href='profile.php'">
+                        <div class="input-mind-trigger" onclick="window.location.href='post.php'">
+                            Bạn đang nghĩ gì, <?php echo explode(' ', $_SESSION['user_fullname'])[0]; ?>?
+                        </div>
                     </div>
                     <div class="post-actions">
-                        <div class="action-btn"><i class="fa-solid fa-image" style="color:#45bd62"></i> Ảnh</div>
-                        <div class="action-btn"><i class="fa-solid fa-video" style="color:#f02849"></i> Video</div>
-                        <div class="action-btn"><i class="fa-regular fa-face-smile" style="color:#f7b928"></i> Cảm xúc</div>
+                        <div class="action-btn" onclick="window.location.href='post.php'"><i class="fa-solid fa-image" style="color:#45bd62"></i> Ảnh</div>
+                        <div class="action-btn" onclick="window.location.href='post.php'"><i class="fa-regular fa-face-smile" style="color:#f7b928"></i> Cảm xúc</div>
                     </div>
                 </div>
 
