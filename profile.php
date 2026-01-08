@@ -12,8 +12,53 @@ if (!isset($_SESSION['user_id'])) {
 
 $current_user_id = $_SESSION['user_id'];
 
-// 2. Xác định Profile cần xem (Của mình hay của người khác?)
-// Nếu có ?id=... trên URL thì xem người đó, ngược lại xem chính mình
+// --- [MỚI] XỬ LÝ UPLOAD ẢNH TRỰC TIẾP ---
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Tự động tạo thư mục uploads nếu chưa có
+    if (!file_exists('uploads')) {
+        mkdir('uploads', 0777, true);
+    }
+
+    // A. Xử lý Đổi Avatar
+    if (isset($_FILES['direct_avatar']) && $_FILES['direct_avatar']['error'] == 0) {
+        $ext = strtolower(pathinfo($_FILES['direct_avatar']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (in_array($ext, $allowed)) {
+            $new_name = "avatar_" . $current_user_id . "_" . time() . "." . $ext;
+            if (move_uploaded_file($_FILES['direct_avatar']['tmp_name'], "uploads/" . $new_name)) {
+                $sql = "UPDATE Users SET Avatar = ? WHERE UserID = ?";
+                $stmt = mysqli_prepare($conn, $sql);
+                mysqli_stmt_bind_param($stmt, "si", $new_name, $current_user_id);
+                mysqli_stmt_execute($stmt);
+                
+                $_SESSION['user_avatar'] = $new_name; // Cập nhật session
+                header("Location: profile.php"); // Reload trang
+                exit();
+            }
+        }
+    }
+
+    // B. Xử lý Đổi Ảnh Bìa
+    if (isset($_FILES['direct_cover']) && $_FILES['direct_cover']['error'] == 0) {
+        $ext = strtolower(pathinfo($_FILES['direct_cover']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (in_array($ext, $allowed)) {
+            $new_name = "cover_" . $current_user_id . "_" . time() . "." . $ext;
+            if (move_uploaded_file($_FILES['direct_cover']['tmp_name'], "uploads/" . $new_name)) {
+                $sql = "UPDATE Users SET CoverImage = ? WHERE UserID = ?";
+                $stmt = mysqli_prepare($conn, $sql);
+                mysqli_stmt_bind_param($stmt, "si", $new_name, $current_user_id);
+                mysqli_stmt_execute($stmt);
+                
+                header("Location: profile.php"); // Reload trang
+                exit();
+            }
+        }
+    }
+}
+// --- [HẾT PHẦN XỬ LÝ UPLOAD] ---
+
+// 2. Xác định Profile cần xem
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $profile_id = $_GET['id'];
 } else {
@@ -40,9 +85,9 @@ $avatar = !empty($user['Avatar'])
     ? 'uploads/' . $user['Avatar'] 
     : 'https://ui-avatars.com/api/?name=' . urlencode($user['FullName']) . '&background=random&size=200';
 
-$cover_style = !empty($user['CoverPhoto']) 
-    ? "background-image: url('uploads/{$user['CoverPhoto']}');" 
-    : "background-color: #d1d1d1;"; 
+$cover_style = !empty($user['CoverImage']) 
+    ? "background-image: url('uploads/{$user['CoverImage']}');" 
+    : "background-color: #d1d1d1;";
 
 // Định dạng ngày sinh
 $birthDate = !empty($user['BirthDate']) ? date("d/m", strtotime($user['BirthDate'])) : "Chưa cập nhật";
@@ -65,7 +110,7 @@ $genderTxt = ($user['Gender'] == 'Nu') ? 'Nữ' : ($user['Gender'] == 'Nam' ? 'N
         ul { list-style: none; }
         button { cursor: pointer; outline: none; }
 
-        /* --- NAVBAR (Giữ nguyên) --- */
+        /* --- NAVBAR --- */
         .navbar {
             background: #fff; height: 60px; padding: 0 16px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -99,6 +144,15 @@ $genderTxt = ($user['Gender'] == 'Nu') ? 'Nữ' : ($user['Gender'] == 'Nam' ? 'N
             border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
             position: relative;
         }
+        /* [MỚI] CSS Nút đổi ảnh bìa */
+        .btn-update-cover {
+            position: absolute; bottom: 15px; right: 30px;
+            background: #fff; padding: 8px 12px; border-radius: 6px;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px;
+            z-index: 10;
+        }
+        .btn-update-cover:hover { background: #f0f2f5; }
 
         /* Thông tin User */
         .header-details {
@@ -116,6 +170,15 @@ $genderTxt = ($user['Gender'] == 'Nu') ? 'Nữ' : ($user['Gender'] == 'Nam' ? 'N
             width: 168px; height: 168px; border-radius: 50%;
             border: 4px solid #fff; object-fit: cover; background: #fff;
         }
+        /* [MỚI] CSS Nút đổi Avatar */
+        .btn-update-avatar {
+            position: absolute; bottom: 10px; right: 10px;
+            width: 36px; height: 36px; background: #e4e6eb; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid #fff; font-size: 1.2rem;
+            z-index: 10;
+        }
+        .btn-update-avatar:hover { background: #d8dadf; }
 
         .name-wrapper { margin-bottom: 10px; }
         .fullname { font-size: 2rem; font-weight: 800; color: #050505; line-height: 1.1; margin-bottom: 4px; }
@@ -235,13 +298,33 @@ $genderTxt = ($user['Gender'] == 'Nu') ? 'Nữ' : ($user['Gender'] == 'Nam' ? 'N
 
     <div class="profile-header">
         <div class="container">
-            <div class="cover-photo" style="<?php echo $cover_style; ?>"></div>
+            <div class="cover-photo" style="<?php echo $cover_style; ?>">
+                <?php if($is_own_profile): ?>
+                <form action="" method="POST" enctype="multipart/form-data">
+                    <label for="upload_cover" class="btn-update-cover">
+                        <i class="fa-solid fa-camera"></i> Đổi ảnh bìa
+                    </label>
+                    <input type="file" name="direct_cover" id="upload_cover" accept="image/*" 
+                           style="display:none;" onchange="this.form.submit()"> 
+                </form>
+                <?php endif; ?>
+            </div>
             
             <div class="header-details">
                 <div class="header-top-row">
                     <div class="user-identity">
                         <div class="avatar-container">
                             <img src="<?php echo $avatar; ?>" class="big-avatar" alt="Avatar">
+                            
+                            <?php if($is_own_profile): ?>
+                            <form action="" method="POST" enctype="multipart/form-data">
+                                <label for="upload_avatar" class="btn-update-avatar">
+                                    <i class="fa-solid fa-camera"></i>
+                                </label>
+                                <input type="file" name="direct_avatar" id="upload_avatar" accept="image/*" 
+                                       style="display:none;" onchange="this.form.submit()">
+                            </form>
+                            <?php endif; ?>
                         </div>
                         
                         <div class="name-wrapper">
