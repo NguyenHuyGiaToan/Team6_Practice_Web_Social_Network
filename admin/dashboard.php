@@ -40,7 +40,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="logo">
-                <i class="fa-solid fa-shield-halved"></i>
+                <img src="../assets/images/avt.png">
                 <span>TSix Admin</span>
             </div>
 
@@ -353,9 +353,23 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                         foreach ($top_users as $user) { ?>
                             <tr>
                                 <td>
-                                    <img style="width: 30px; height: 30px;border-radius: 42px;position: relative;top: 8px;"
-                                        src="../uploads/avatars/<?= $user['Avatar'] ?? 'default_avatar.png' ?>" alt="">
-                                    <?= $user['FullName'] ?>
+                                    <div class="user-info">
+                                        <?php 
+                                            $avatarPath = "../uploads/avatars/" . $user['Avatar'];
+                                                  
+                                            if (!empty($user['Avatar']) && file_exists($avatarPath)) {
+                                                $displayAvatar = $avatarPath;
+                                            } else {
+                                                $displayAvatar = "../uploads/avatars/default_avatar.png";
+                                            }
+                                        ?>
+                                            
+                                        <img src="<?= htmlspecialchars($displayAvatar, ENT_QUOTES) ?>" 
+                                            class="user-avatar-small" 
+                                            alt="Avatar">
+                                                
+                                        <span><?= htmlspecialchars($user['FullName'] ?? '', ENT_QUOTES) ?></span>
+                                    </div>
                                 </td>
                                 <td><?= $user['Số bài viết'] ?></td>
                                 <td><?= $user['Số tương tác'] ?></td>
@@ -366,31 +380,47 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                 </section>
 
                 <section class="table-box">
-                    <h4 class="box-title">Top bài viết được tương tác nhiều</h4>
+                    <h4 class="box-title">Top 3 bài viết được tương tác nhiều nhất</h4>
                     <?php
-                    $sql_top_post = "SELECT p.PostID, p.Content,img.ImageUrl,img.ImageID, u.FullName, p.LikeCount, p.CommentCount, p.UpdatedAt
+                    $sql_top_post = "SELECT p.PostID, p.Content, ANY_VALUE(img.ImageUrl) as ImageUrl, u.FullName, p.LikeCount, p.CommentCount, p.UpdatedAt
                                     FROM posts p
                                     LEFT JOIN users u on p.FK_UserID = u.UserID
                                     LEFT JOIN post_images img on p.PostID = img.FK_PostID
-                                    ORDER BY p.LikeCount desc, p.CommentCount DESC
-                                    LIMIT 1;";
+                                    GROUP BY p.PostID
+                                    ORDER BY (p.LikeCount + p.CommentCount) DESC
+                                    LIMIT 3;";
+                    
                     $result_top_post = $conn->query($sql_top_post);
                     $top_posts = [];
-                    if ($result_top_post)
+                    if ($result_top_post) {
                         $top_posts = $result_top_post->fetch_all(MYSQLI_ASSOC);
+                    }
                     ?>
-                    <div class="top_post_container">
-                        <?php foreach ($top_posts as $top_post) { ?>
-                            <img src="../uploads/<?= $top_post['ImageUrl'] ?>" alt="" class="top_post_img">
-                            <div class="top_post_content">
-                                <h4><?= $top_post['Content'] ?></h4>
-                                <p>Đăng bởi <strong><?= $top_post['FullName'] ?></strong></p>
-                                <span><?= timeAgo($top_post['UpdatedAt']) ?></span>
-                                <div class="top_post_stats">
-                                    <span><i class="fa-solid fa-thumbs-up"></i> <?= $top_post['LikeCount'] ?></span>
-                                    <span><i class="fa-solid fa-comments"></i> <?= $top_post['CommentCount'] ?></span>
+                    <div class="top_post_list">
+                        <?php foreach ($top_posts as $top_post) { 
+                            // Xử lý link dẫn tới bài viết cụ thể trên trang index (giả sử dùng anchor #post-)
+                            $post_link = "../index.php#post-" . $top_post['PostID'];
+                            
+                            // Xử lý ảnh mặc định nếu bài viết không có ảnh
+                            $image_src = !empty($top_post['ImageUrl']) ? "../uploads/posts/" . $top_post['ImageUrl'] : "../assets/images/no-image.png";
+                        ?>
+                            <a href="<?= $post_link ?>" class="top_post_item_link" target="_blank">
+                                <div class="top_post_container">
+                                    <div class="top_post_img_wrapper">
+                                        <img src="<?= $image_src ?>" alt="Post Image" class="top_post_img">
+                                    </div>
+                                    <div class="top_post_content">
+                                        <h4 class="post-content-preview"><?= htmlspecialchars($top_post['Content']) ?></h4>
+                                        <p>Đăng bởi <strong><?= htmlspecialchars($top_post['FullName']) ?></strong></p>
+                                        <span class="post-time"><?= timeAgo($top_post['UpdatedAt']) ?></span>
+                                        <div class="top_post_stats">
+                                            <span><i class="fa-solid fa-thumbs-up"></i> <?= $top_post['LikeCount'] ?></span>
+                                            <span><i class="fa-solid fa-comments"></i> <?= $top_post['CommentCount'] ?></span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
+                            <hr class="post-divider">
                         <?php } ?>
                     </div>
                 </section>

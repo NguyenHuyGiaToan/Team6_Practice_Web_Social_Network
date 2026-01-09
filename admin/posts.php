@@ -94,7 +94,8 @@ $time_filter = $_GET['time'] ?? 'all';
 $status_filter = $_GET['status'] ?? 'all';
 
 // Query bài viết
-$sql_posts = "SELECT p.*, u.FullName, u.Avatar 
+$sql_posts = "SELECT p.*, u.FullName, u.Avatar, 
+              (SELECT ImageUrl FROM post_images WHERE FK_PostID = p.PostID LIMIT 1) as ImageUrl
               FROM Posts p 
               JOIN Users u ON p.FK_UserID = u.UserID 
               WHERE p.Status != 'deleted'";
@@ -192,7 +193,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="logo">
-                <i class="fa-solid fa-shield-halved"></i>
+                <img src="../assets/images/avt.png">
                 <span>TSix Admin</span>
             </div>
 
@@ -295,7 +296,10 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                     <td>
                                         <div class="post-with-image">
                                             <div class="post-image">
-                                                <img src="https://picsum.photos/60/60?random=<?= $post['PostID'] ?>" alt="Ảnh">
+                                                <?php
+                                                    $image_src = !empty($post['ImageUrl']) ? "../uploads/posts/" . $post['ImageUrl'] : "../assets/images/no-image.png";
+                                                ?>
+                                                <img src="<?= htmlspecialchars($image_src, ENT_QUOTES) ?>" alt="Ảnh">
                                             </div>
                                             <div class="post-content">
                                                 <div class="post-text"><?= htmlspecialchars(substr($post['Content'], 0, 70)) ?>...</div>
@@ -305,10 +309,21 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                     </td>
                                     <td>
                                         <div class="user-info">
-                                            <img src="../uploads/avatars/<?= htmlspecialchars($post['Avatar'] ?? 'default.png') ?>" 
-                                                 class="user-avatar" 
-                                                 onerror="this.src='https://i.pravatar.cc/40?u=<?= $post['FK_UserID'] ?>'">
-                                            <span><?= htmlspecialchars($post['FullName']) ?></span>
+                                            <?php 
+                                                $avatarPath = "../uploads/avatars/" . $post['Avatar'];
+                                                    
+                                                if (!empty($post['Avatar']) && file_exists($avatarPath)) {
+                                                    $displayAvatar = $avatarPath;
+                                                } else {
+                                                    $displayAvatar = "../uploads/avatars/default_avatar.png";
+                                                }
+                                            ?>
+                                                
+                                            <img src="<?= htmlspecialchars($displayAvatar, ENT_QUOTES) ?>" 
+                                                class="user-avatar-small" 
+                                                alt="Avatar">
+                                                    
+                                            <span><?= htmlspecialchars($post['FullName'] ?? '', ENT_QUOTES) ?></span>
                                         </div>
                                     </td>
                                     <td><?= date('d/m/Y', strtotime($post['CreatedAt'])) ?></td>
@@ -325,7 +340,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                                onclick="return confirm('Hiển thị bài viết này?')">
                                                 <i class="fas fa-eye-slash"></i> Ẩn
                                             </a>
-                                        <?php endif; ?>
+                                <?php endif; ?>
                                     </td>
                                     <td>
                                         <div class="action-btns">
@@ -452,4 +467,3 @@ document.querySelector('input[name="search"]').addEventListener('keyup', functio
     if (e.key === 'Enter') this.closest('form').submit();
 });
 </script>
-<?php require_once '../includes/footer.php'; ?>

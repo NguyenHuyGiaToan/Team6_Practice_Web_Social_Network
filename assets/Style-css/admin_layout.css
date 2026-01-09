@@ -32,14 +32,26 @@ body {
 }
 
 .logo {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 30px;
+    display: flex;          
+    align-items: center;    
+    gap: 10px;              
+    padding: 10px 0;       
+    margin-bottom: 20px;   
+    width: 100%;           
 }
 
-.logo i {
-    color: #3b82f6;
-    margin-right: 8px;
+.logo img {
+    height: 30px;         
+    width: 25px;
+    object-fit: contain;
+    flex-shrink: 0;        
+}
+
+.logo span {
+    font-size: 18px;
+    font-weight: bold;
+    color: #001529;      
+    white-space: nowrap;  
 }
 
 .menu li {

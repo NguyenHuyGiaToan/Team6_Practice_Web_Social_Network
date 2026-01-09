@@ -80,7 +80,7 @@ $posts_result = mysqli_stmt_get_result($posts_stmt);
 $posts = [];
 while ($post = mysqli_fetch_assoc($posts_result)) {
     // Định dạng thời gian tương đối
-    $post['time_ago'] = timeAgo($post['CreatedAt']); // Hàm timeAgo() phải có trong functions.php
+    $post['time_ago'] = timeAgo($post['CreatedAt']); 
 
     // Xử lý avatar
     $post['avatar_url'] = !empty($post['Avatar'])

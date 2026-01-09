@@ -105,14 +105,15 @@
 .user-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
+
 .user-avatar-small {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #E5E7EB;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%; 
+    object-fit: cover;  
+    border: 1px solid #eee;
 }
 
 /* Action buttons */

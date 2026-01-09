@@ -40,7 +40,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="logo">
-                <i class="fa-solid fa-shield-halved"></i>
+                <img src="../assets/images/avt.png">
                 <span>TSix Admin</span>
             </div>
 
@@ -61,7 +61,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
 
             <!-- TOPBAR -->
             <header class="topbar">
-                <span>Admin / Bảng điều khiển</span>
+                <span>Admin / Báo cáo</span>
                 <div class="topbar-right">
                     <input type="text" placeholder="Tìm kiếm...">
                     <i class="fa-regular fa-bell"></i>

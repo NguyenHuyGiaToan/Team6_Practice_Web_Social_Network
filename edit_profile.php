@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_save_changes'])) {
             $ext = strtolower(pathinfo($_FILES['avatar_file']['name'], PATHINFO_EXTENSION));
             if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $new_avatar = "avatar_" . $user_id . "_" . time() . "." . $ext;
-                if (move_uploaded_file($_FILES['avatar_file']['tmp_name'], "uploads/" . $new_avatar)) {
+                if (move_uploaded_file($_FILES['avatar_file']['tmp_name'], "uploads/avatars/" . $new_avatar)) {
                     // Nối thêm vào SQL và Params
                     $sql .= ", Avatar = ?";
                     $params[] = $new_avatar;
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_save_changes'])) {
             $ext = strtolower(pathinfo($_FILES['cover_file']['name'], PATHINFO_EXTENSION));
             if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $new_cover = "cover_" . $user_id . "_" . time() . "." . $ext;
-                if (move_uploaded_file($_FILES['cover_file']['tmp_name'], "uploads/" . $new_cover)) {
+                if (move_uploaded_file($_FILES['cover_file']['tmp_name'], "uploads/avatars/" . $new_cover)) {
                     // Nối thêm vào SQL và Params
                     $sql .= ", CoverImage = ?";
                     $params[] = $new_cover;
