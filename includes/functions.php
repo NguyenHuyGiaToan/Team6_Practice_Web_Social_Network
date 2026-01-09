@@ -22,20 +22,41 @@ function redirect($url) {
 
 // 4. Hàm định dạng thời gian (Ví dụ: 5 phút trước, 1 giờ trước)
 // Phục vụ task của Thị Như khi hiển thị bài viết
-function timeAgo($timestamp) {
-    $time_ago = strtotime($timestamp);
-    $current_time = time();
-    $time_difference = $current_time - $time_ago;
-    $seconds = $time_difference;
-    
-    $minutes = round($seconds / 60);           // value 60 is seconds  
-    $hours   = round($seconds / 3600);         // value 3600 is 60 minutes * 60 sec  
-    $days    = round($seconds / 86400);        // value 86400 is 24 hours * 60 minutes * 60 sec  
-    
-    if($seconds <= 60) return "Vừa xong";
-    else if($minutes <= 60) return $minutes . " phút trước";
-    else if($hours <= 24) return $hours . " giờ trước";
-    else return $days . " ngày trước";
+function timeAgo($datetime) {
+    // Chấp nhận cả string datetime hoặc timestamp
+    $time = is_numeric($datetime) ? $datetime : strtotime($datetime);
+    if ($time === false) {
+        return 'Không xác định';
+    }
+
+    $now = time();
+    $diff = $now - $time;
+
+    if ($diff < 60) {
+        return 'Vừa xong';
+    }
+
+    $intervals = [
+        'năm'   => 31536000,  // 365 * 24 * 60 * 60
+        'tháng' => 2592000,   // 30 * 24 * 60 * 60
+        'tuần'  => 604800,    // 7 * 24 * 60 * 60
+        'ngày'  => 86400,
+        'giờ'   => 3600,
+        'phút'  => 60,
+    ];
+
+    foreach ($intervals as $unit => $seconds) {
+        $count = floor($diff / $seconds);
+        if ($count >= 1) {
+            // Xử lý số nhiều (phút, giờ, ngày,...)
+            if ($count == 1 && in_array($unit, ['ngày', 'giờ', 'phút'])) {
+                $unit = rtrim($unit, 's'); // không cần, vì tiếng Việt không đổi dạng
+            }
+            return $count . ' ' . $unit . ' trước';
+        }
+    }
+
+    return 'Vừa xong';
 }
 
 // 5. Hàm lọc từ khóa nhạy cảm
