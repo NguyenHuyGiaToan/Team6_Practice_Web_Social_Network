@@ -41,12 +41,12 @@ $unread_count = mysqli_fetch_assoc($noti_result)['unread'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Navbar hiện đại, lấy cảm hứng Facebook 2025 */
+        /* Tinh chỉnh thanh Navbar tổng thể */
         .navbar {
             background: #ffffff;
-            height: 60px;
+            height: 56px; /* Chiều cao chuẩn Facebook */
             padding: 0 16px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Bóng nhẹ hơn */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -55,87 +55,77 @@ $unread_count = mysqli_fetch_assoc($noti_result)['unread'];
             z-index: 1000;
         }
 
+        /* Điều chỉnh Logo theo ảnh mẫu */
+        .navbar-logo-img {
+            width: 40px; 
+            height: 40px;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Điều chỉnh Nav-left và Ô tìm kiếm */
         .nav-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px; /* Khoảng cách giữa logo và kính lúp hẹp lại */
             flex: 1;
-            max-width: 400px;
-        }
-
-        .logo {
-            color: #8B1E29;
-            font-weight: 900;
-            font-size: 2.2rem;
-            letter-spacing: -1px;
+            max-width: 320px; /* Giới hạn độ rộng ô tìm kiếm */
         }
 
         /* Ô tìm kiếm */
-        .search-form {
-            flex: 1;
-        }
         .search-box {
             background: #f0f2f5;
-            border-radius: 30px;
-            padding: 10px 16px;
+            border-radius: 50px; /* Bo tròn mạnh hơn */
+            height: 40px; /* Chiều cao khớp với logo */
+            padding: 0 12px;
             display: flex;
             align-items: center;
             width: 100%;
-            transition: background 0.2s;
         }
-        .search-box:hover {
-            background: #e4e6eb;
-        }
+
         .search-box i {
             color: #65676b;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
+            margin-right: 8px;
         }
+
         .search-input {
             border: none;
             background: transparent;
             outline: none;
-            margin-left: 10px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             width: 100%;
             color: #050505;
         }
 
-        /* Nav center - chỉ giữ Home và Friends */
+        /* Center Navigation*/
         .nav-center {
             display: flex;
-            gap: 8px;
+            gap: 4px;
+            flex: 2;
+            justify-content: center;
         }
+
         .nav-item {
-            width: 110px;
+            width: 100px;
             height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #65676b;
-            font-size: 1.5rem;
-            border-radius: 10px;
-            cursor: pointer;
+            font-size: 1.4rem;
+            border-radius: 8px;
             transition: background 0.2s;
         }
-        .nav-item:hover {
-            background: #f0f2f5;
-        }
+
         .nav-item.active {
-            color: #8B1E29;
-            position: relative;
-        }
-        .nav-item.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 4px;
-            background: #8B1E29;
-            border-radius: 4px 4px 0 0;
+            color: #8B1E29; 
         }
 
+        .nav-item.active::after {
+            background: #8B1E29;
+            width: 100%; /* Đường gạch chân chạy hết chiều ngang */
+        }
         /* Nav right */
         .nav-right {
             display: flex;
@@ -209,7 +199,9 @@ $unread_count = mysqli_fetch_assoc($noti_result)['unread'];
     <nav class="navbar">
         <!-- Left: Logo + Search -->
         <div class="nav-left">
-            <a href="index.php" class="logo">TSix</a>
+            <a href="index.php">
+                <img src="<?php echo BASE_URL; ?>/assets/images/avt.png" class="navbar-logo-img" alt="TSix Logo">
+            </a>
             <form action="search.php" method="GET" class="search-form">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass"></i>

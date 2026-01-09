@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         if (in_array($ext, $allowed)) {
             $new_name = "avatar_" . $current_user_id . "_" . time() . "." . $ext;
-            if (move_uploaded_file($_FILES['direct_avatar']['tmp_name'], "uploads/" . $new_name)) {
+            if (move_uploaded_file($_FILES['direct_avatar']['tmp_name'], BASE_URL . "uploads/avatars/" . $new_name)) {
                 $sql = "UPDATE Users SET Avatar = ? WHERE UserID = ?";
                 $stmt = mysqli_prepare($conn, $sql);
                 mysqli_stmt_bind_param($stmt, "si", $new_name, $current_user_id);
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         if (in_array($ext, $allowed)) {
             $new_name = "cover_" . $current_user_id . "_" . time() . "." . $ext;
-            if (move_uploaded_file($_FILES['direct_cover']['tmp_name'], "uploads/" . $new_name)) {
+            if (move_uploaded_file($_FILES['direct_cover']['tmp_name'], BASE_URL . "uploads/cover_images/" . $new_name)) {
                 $sql = "UPDATE Users SET CoverImage = ? WHERE UserID = ?";
                 $stmt = mysqli_prepare($conn, $sql);
                 mysqli_stmt_bind_param($stmt, "si", $new_name, $current_user_id);
@@ -82,11 +82,11 @@ $_SESSION['user_avatar']    = $user['Avatar'] ?? null;
 
 // 4. Xử lý hiển thị Avatar và Cover
 $avatar_url = !empty($user['Avatar'])
-    ? 'uploads/' . htmlspecialchars($user['Avatar'])
+    ? BASE_URL . 'uploads/avatars/' . htmlspecialchars($user['Avatar'])
     : 'https://ui-avatars.com/api/?name=' . urlencode($user['FullName']) . '&background=8B1E29&color=fff&size=400';
 
 $cover_style = !empty($user['CoverImage'])
-    ? "background-image: url('uploads/" . htmlspecialchars($user['CoverImage']) . "');"
+    ? "background-image: url('" . BASE_URL . "uploads/cover_images/" . htmlspecialchars($user['CoverImage']) . "');"
     : "background-color: #d1d1d1;";
 
 // Định dạng ngày sinh và giới tính
@@ -203,20 +203,78 @@ $genderTxt = ($user['Gender'] === 'Nam') ? 'Nam'
         }
         .photo-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
 
-        .create-post-top {
-            display: flex; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid #e4e6eb; margin-bottom: 12px;
-        }
-        .input-mind {
-            flex: 1; padding: 12px; background: #f0f2f5; border: none; border-radius: 30px;
-            font-size: 1rem; cursor: pointer;
+        /* Tăng độ bo góc và độ đậm khối cho khung tổng thể */
+        .create-post { 
+            margin-bottom: 20px; 
+            background: #fff; 
+            border-radius: 15px; /* Bo tròn góc khung ngoài nhiều hơn */
+            padding: 15px; 
+            /* Tăng độ đậm khối bằng cách chỉnh thông số box-shadow */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
         }
 
-        .post-actions { display: flex; justify-content: space-around; }
-        .action-btn {
-            flex: 1; padding: 10px; text-align: center; color: #65676b;
-            font-weight: 600; cursor: pointer; border-radius: 8px;
+        /* Căn chỉnh phần top */
+        .create-post-top { 
+            display: flex; 
+            align-items: center; /* Căn giữa ảnh và khung nhập theo chiều dọc */
+            gap: 12px; 
+            padding-bottom: 15px; 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid #e4e6eb; 
         }
-        .action-btn:hover { background: #f0f2f5; }
+
+        .create-post-top img { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .create-post-top img:hover {
+            filter: brightness(0.9);
+        }
+        /* Điều chỉnh khung "Bạn đang nghĩ gì" */
+        .input-mind-trigger { 
+            flex: 1; 
+            padding: 12px 20px; 
+            background: #f0f2f5; 
+            border-radius: 25px; /* Bo tròn mạnh hai đầu */
+            cursor: pointer; 
+            font-size: 1rem; 
+            color: gray;
+            font-weight: bold;
+            display: flex;
+            align-items: center; 
+            transition: background 0.2s;
+        }
+
+        .input-mind-trigger:hover {
+            background: #8B1E29; /* Hiệu ứng hover cho khung nhập */
+        }
+        
+        /* Các nút hành động (Ảnh, Cảm xúc) */
+        .post-actions { 
+            display: flex; 
+            justify-content: space-around; 
+        }
+
+        .action-btn { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 10px 20px; 
+            color: #65676b; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover { 
+            background: #f0f2f5; 
+        }
 
         .post { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; }
         .poster-info { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
@@ -279,12 +337,6 @@ $genderTxt = ($user['Gender'] === 'Nam') ? 'Nam'
                                 <i class="fa-solid fa-pen"></i> Chỉnh sửa trang cá nhân
                             </button>
                         <?php else: ?>
-                            <button class="btn-blue">
-                                <i class="fa-solid fa-user-plus"></i> Theo dõi
-                            </button>
-                            <button class="btn-gray">
-                                <i class="fa-brands fa-facebook-messenger"></i> Nhắn tin
-                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -311,10 +363,6 @@ $genderTxt = ($user['Gender'] === 'Nam') ? 'Nam'
                         </div>
                     <?php endif; ?>
 
-                    <div class="intro-item">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                        <span>Đã học tại <b>HUB - Đại học Ngân hàng</b></span>
-                    </div>
                     <div class="intro-item">
                         <i class="fa-solid fa-location-dot"></i>
                         <span>Sống tại <b>TP. Hồ Chí Minh</b></span>
@@ -346,15 +394,16 @@ $genderTxt = ($user['Gender'] === 'Nam') ? 'Nam'
             <!-- Cột phải -->
             <div class="right-col">
                 <?php if ($is_own_profile): ?>
-                <div class="card">
+                <div class="create-post">
                     <div class="create-post-top">
-                        <img src="<?php echo $avatar_url; ?>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-                        <input type="text" class="input-mind" placeholder="Bạn đang nghĩ gì thế?">
+                        <img src="<?php echo $avatar_url; ?>" onclick="window.location.href='profile.php'">
+                        <div class="input-mind-trigger" onclick="window.location.href='post.php'">
+                            Bạn đang nghĩ gì, <?php echo explode(' ', $_SESSION['user_fullname'])[0]; ?>?
+                        </div>
                     </div>
                     <div class="post-actions">
-                        <div class="action-btn"><i class="fa-solid fa-video" style="color:#f02849;"></i> Video</div>
-                        <div class="action-btn"><i class="fa-solid fa-images" style="color:#45bd62;"></i> Ảnh</div>
-                        <div class="action-btn"><i class="fa-regular fa-face-smile" style="color:#f7b928;"></i> Cảm xúc</div>
+                        <div class="action-btn" onclick="window.location.href='post.php'"><i class="fa-solid fa-image" style="color:#45bd62"></i> Ảnh</div>
+                        <div class="action-btn" onclick="window.location.href='post.php'"><i class="fa-regular fa-face-smile" style="color:#f7b928"></i> Cảm xúc</div>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -377,8 +426,7 @@ $genderTxt = ($user['Gender'] === 'Nam') ? 'Nam'
                     </div>
                     <div class="post-actions" style="border-top:1px solid #e4e6eb; padding-top:8px;">
                         <div class="action-btn"><i class="fa-regular fa-thumbs-up"></i> Thích</div>
-                        <div class="action-btn"><i class="fa-regular fa-message"></i> Bình luận</div>
-                        <div class="action-btn"><i class="fa-solid fa-share"></i> Chia sẻ</div>
+                        <div class="action-btn"><i class="fa-regular fa-message"></i> Bình luận</div> 
                     </div>
                 </div>
             </div>

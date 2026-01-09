@@ -100,8 +100,9 @@ $sql = "SELECT UserID, FullName, Email, Phone, Status, CreatedAt, Avatar FROM Us
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND (FullName LIKE ? OR Email LIKE ?)";
+    $sql .= " AND (FullName LIKE ? OR Email LIKE ? OR Phone LIKE ?)";
     $search_term = "%$search%";
+    $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
 }
@@ -117,8 +118,8 @@ $sql .= " ORDER BY UserID, CreatedAt DESC LIMIT $limit OFFSET $offset";
 // Thực thi query
 $stmt = $conn->prepare($sql);
 if (!empty($search)) {
-    // two string params for the LIKE clauses
-    $stmt->bind_param('ss', $search_term, $search_term);
+    // three string params for the LIKE clauses
+    $stmt->bind_param('sss', $search_term, $search_term, $search_term);
 }
 $stmt->execute();
 $res = $stmt->get_result();

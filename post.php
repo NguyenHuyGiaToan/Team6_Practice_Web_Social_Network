@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_post'])) {
                 $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                 if (in_array($ext, $allowed)) {
                     $image_name = uniqid() . '.' . $ext;
-                    $upload_path = __DIR__ . "/uploads/posts/" . $image_name;
+                    $upload_path = __DIR__ . BASE_URL . "/uploads/posts/" . $image_name;
                     if (!is_dir(dirname($upload_path))) mkdir(dirname($upload_path), 0777, true);
                     if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
                         $img_stmt = mysqli_prepare($conn, "INSERT INTO Post_Images (FK_PostID, ImageUrl) VALUES (?, ?)");
@@ -72,7 +72,7 @@ mysqli_stmt_execute($stmt);
 $current_user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $avatar_url = !empty($current_user['Avatar']) 
-    ? 'uploads/avatars/' . htmlspecialchars($current_user['Avatar']) 
+    ? BASE_URL . 'uploads/avatars/' . htmlspecialchars($current_user['Avatar']) 
     : 'https://ui-avatars.com/api/?name=' . urlencode($current_user['FullName']) . '&background=8B1E29&color=fff&size=200';
 ?>
 
@@ -122,10 +122,24 @@ $avatar_url = !empty($current_user['Avatar'])
         .feeling-display { font-weight: 400; color: #65676b; font-size: 0.9rem; }
 
         /* Dropdown Privacy Style */
+        /* Thiết lập font cho toàn bộ select */
         .privacy-select {
-            margin-top: 4px; border: none; background: #e4e6eb; padding: 4px 8px;
-            border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: #050505; outline: none;
-            width: fit-content;
+            font-family: 'Segoe UI', 'FontAwesome', sans-serif;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ccd0d5;
+            background-color: #f0f2f5;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Đảm bảo các option cũng nhận font này */
+        .privacy-select option {
+            font-family: 'Segoe UI', 'FontAwesome', sans-serif;
+            padding: 10px;
+            background: #fff;
+            color: #1c1e21;
         }
 
         .input-area {
@@ -197,7 +211,7 @@ $avatar_url = !empty($current_user['Avatar'])
                             <span class="feeling-display" id="feelingDisplay"></span>
                         </div>
                         
-                        <select name="privacy" class="privacy-select">
+                        <select name="privacy" class="privacy-select fa">
                             <option value="public" selected>&#xf0ac; Công khai</option>
                             <option value="friends">&#xf500; Bạn bè (Hạn chế)</option>
                             <option value="private">&#xf023; Chỉ mình tôi</option>
