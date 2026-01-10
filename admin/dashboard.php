@@ -16,11 +16,12 @@ if ($_SESSION['user_role'] !== 'admin' && $_SESSION['role'] !== 'admin') {
 
 require_once '../includes/database.php';
 require_once '../includes/functions.php';
+// require_once '../includes/config.php';
 
 // Lấy thông tin admin đang đăng nhập
 $admin_id = $_SESSION['user_id'];
 $admin_name = $_SESSION['user_name'];
-$admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_avatar.png';
+$admin_avatar = $_SESSION['user_avatar'] ?? __DIR__ . '/uploads/avatars/default_admin_avatar.png';
 ?>
 
 <!DOCTYPE html>
@@ -29,8 +30,8 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard - TSix</title>
-    <link rel="stylesheet" href="/web-social-network/assets/Style-css/admin_layout.css">
-    <link rel="stylesheet" href="/web-social-network/assets/Style-css/dashboard.css">
+    <link rel="stylesheet" href="../assets/Style-css/admin_layout.css">
+    <link rel="stylesheet" href="../assets/Style-css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
@@ -65,8 +66,8 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                 <div class="topbar-right">
                     <input type="text" placeholder="Tìm kiếm...">
                     <i class="fa-regular fa-bell"></i>
-                    <a href="../profile.php" style="cursor:pointer; display: grid; grid-template-columns: auto auto; align-items: center; gap: 8px;">
-                        <img width="30px" height="30px" src="../uploads/avatars/<?= $admin_avatar; ?>" class="avatar" alt="">
+                    <a href="profile.php" style="cursor:pointer; display: grid; grid-template-columns: auto auto; align-items: center; gap: 8px;">
+                        <img width="30px" height="30px" src="../uploads/avatars/<?= $admin_avatar ?>" class="avatar" alt="">
                         <span style="font-weight: 600;"><?php echo htmlspecialchars($admin_name); ?></span>
                     </a>
                 </div>
@@ -398,9 +399,8 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                     ?>
                     <div class="top_post_list">
                         <?php foreach ($top_posts as $top_post) { 
-                            // Xử lý link dẫn tới bài viết cụ thể trên trang index (giả sử dùng anchor #post-)
-                            $post_link = "../index.php#post-" . $top_post['PostID'];
-                            
+                            // Xử lý link dẫn tới bài viết cụ thể trên trang index 
+                            $post_link = "index.php#post-" . $top_post['PostID'];
                             // Xử lý ảnh mặc định nếu bài viết không có ảnh
                             $image_src = !empty($top_post['ImageUrl']) ? "../uploads/posts/" . $top_post['ImageUrl'] : "../assets/images/no-image.png";
                         ?>

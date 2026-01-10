@@ -75,14 +75,22 @@ $old_notifications = array_filter($notifications, fn($n) => $n['IsRead'] == 1);
         a { text-decoration: none; color: inherit; }
 
         /* Container */
-        .container { max-width: 700px; margin: 20px auto; padding: 0 16px; }
+        .container { 
+            max-width: 700px; 
+            margin: 20px auto; 
+            padding: 0 16px; 
+            border-radius: 12px;
+            border: #8B1E29;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
 
         /* Tiêu đề */
         .page-title { 
             font-size: 1.8rem; 
             font-weight: 700; 
+            text-align: center;
             margin-bottom: 20px; 
-            color: #050505;
+            color: #8B1E29;
         }
 
         /* Section thông báo */

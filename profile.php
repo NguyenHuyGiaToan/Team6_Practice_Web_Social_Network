@@ -273,7 +273,7 @@ $genderTxt = ($user['Gender'] === 'Nam') ? 'Nam'
         }
 
         .action-btn:hover { 
-            background: #f0f2f5; 
+            background: #8B1E29; 
         }
 
         .post { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; }
