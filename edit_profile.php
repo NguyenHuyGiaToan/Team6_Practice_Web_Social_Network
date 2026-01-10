@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_save_changes'])) {
             $ext = strtolower(pathinfo($_FILES['avatar_file']['name'], PATHINFO_EXTENSION));
             if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $new_avatar = "avatar_" . $user_id . "_" . time() . "." . $ext;
-                if (move_uploaded_file($_FILES['avatar_file']['tmp_name'], "uploads/" . $new_avatar)) {
+                if (move_uploaded_file($_FILES['avatar_file']['tmp_name'], BASE_URL . "uploads/avatars/" . $new_avatar)) {
                     // Nối thêm vào SQL và Params
                     $sql .= ", Avatar = ?";
                     $params[] = $new_avatar;
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['btn_save_changes'])) {
             $ext = strtolower(pathinfo($_FILES['cover_file']['name'], PATHINFO_EXTENSION));
             if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $new_cover = "cover_" . $user_id . "_" . time() . "." . $ext;
-                if (move_uploaded_file($_FILES['cover_file']['tmp_name'], "uploads/" . $new_cover)) {
+                if (move_uploaded_file($_FILES['cover_file']['tmp_name'], BASE_URL . "uploads/cover_images/" . $new_cover)) {
                     // Nối thêm vào SQL và Params
                     $sql .= ", CoverImage = ?";
                     $params[] = $new_cover;
@@ -112,8 +112,8 @@ if (isset($_POST['btn_change_pass'])) {
 $query = mysqli_query($conn, "SELECT * FROM Users WHERE UserID = $user_id");
 $user = mysqli_fetch_assoc($query);
 
-$avatarUrl = !empty($user['Avatar']) ? 'uploads/'.$user['Avatar'] : 'https://ui-avatars.com/api/?name='.urlencode($user['FullName']);
-$coverUrl = !empty($user['CoverImage']) ? 'uploads/'.$user['CoverImage'] : ''; 
+$avatarUrl = !empty($user['Avatar']) ? BASE_URL . 'uploads/avatars/' . $user['Avatar'] : 'https://ui-avatars.com/api/?name='.urlencode($user['FullName']);
+$coverUrl = !empty($user['CoverImage']) ? BASE_URL . 'uploads/cover_images/' . $user['CoverImage'] : ''; 
 $coverStyle = !empty($coverUrl) ? "background-image: url('$coverUrl');" : "background-color: #d1d1d1;";
 ?>
 

@@ -25,7 +25,7 @@ $_SESSION['user_avatar']    = $current_user['Avatar'] ?? null;
 // Hàm hỗ trợ hiển thị avatar
 function getAvatarUrl() {
     if (!empty($_SESSION['user_avatar'])) {
-        return 'uploads/avatars/' . htmlspecialchars($_SESSION['user_avatar']);
+        return BASE_URL . 'uploads/avatars/' . htmlspecialchars($_SESSION['user_avatar']);
     }
     return 'https://ui-avatars.com/api/?name=' . urlencode($_SESSION['user_fullname']) . '&background=8B1E29&color=fff&size=200';
 }
@@ -80,11 +80,11 @@ $posts_result = mysqli_stmt_get_result($posts_stmt);
 $posts = [];
 while ($post = mysqli_fetch_assoc($posts_result)) {
     // Định dạng thời gian tương đối
-    $post['time_ago'] = timeAgo($post['CreatedAt']); // Hàm timeAgo() phải có trong functions.php
+    $post['time_ago'] = timeAgo($post['CreatedAt']); 
 
     // Xử lý avatar
     $post['avatar_url'] = !empty($post['Avatar'])
-        ? 'uploads/avatars/' . htmlspecialchars($post['Avatar'])
+        ? BASE_URL . 'uploads/avatars/' . htmlspecialchars($post['Avatar'])
         : 'https://ui-avatars.com/api/?name=' . urlencode($post['FullName']) . '&background=8B1E29&color=fff&size=200';
 
     $posts[] = $post;
@@ -140,7 +140,7 @@ $friends_result = mysqli_stmt_get_result($friends_stmt);
 $friends = [];
 while ($friend = mysqli_fetch_assoc($friends_result)) {
     $friend['avatar_url'] = !empty($friend['Avatar'])
-        ? 'uploads/avatars/' . htmlspecialchars($friend['Avatar'])
+        ? BASE_URL . 'uploads/avatars/' . htmlspecialchars($friend['Avatar'])
         : 'https://ui-avatars.com/api/?name=' . urlencode($friend['FullName']) . '&background=8B1E29&color=fff&size=200';
     
     $friends[] = $friend;
@@ -189,15 +189,78 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         /* News Feed */
         .news-feed { background:#fff; border-radius:8px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
         
-        .create-post { margin-bottom:20px; background:#fff; border-radius:8px; padding:12px; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
-        .create-post-top { display:flex; gap:10px; padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid #e4e6eb; }
-        .create-post-top img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
-        .input-mind { flex:1; padding:12px; background:#f0f2f5; border:none; border-radius:30px; cursor:pointer; font-size:1rem; }
-        .input-mind::placeholder { color:#65676b; }
+        /* Tăng độ bo góc và độ đậm khối cho khung tổng thể */
+        .create-post { 
+            margin-bottom: 20px; 
+            background: #fff; 
+            border-radius: 15px; /* Bo tròn góc khung ngoài nhiều hơn */
+            padding: 15px; 
+            /* Tăng độ đậm khối bằng cách chỉnh thông số box-shadow */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        }
+
+        /* Căn chỉnh phần top */
+        .create-post-top { 
+            display: flex; 
+            align-items: center; /* Căn giữa ảnh và khung nhập theo chiều dọc */
+            gap: 12px; 
+            padding-bottom: 15px; 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid #e4e6eb; 
+        }
+
+        .create-post-top img { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .create-post-top img:hover {
+            filter: brightness(0.9);
+        }
+        /* Điều chỉnh khung "Bạn đang nghĩ gì" */
+        .input-mind-trigger { 
+            flex: 1; 
+            padding: 12px 20px; 
+            background: #f0f2f5; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            color: gray;
+            font-weight: bold;
+            display: flex;
+            align-items: center; 
+            transition: background 0.2s;
+        }
+
+        .input-mind-trigger:hover {
+            background: #8B1E29; 
+        }
         
-        .post-actions { display:flex; justify-content:space-around; }
-        .action-btn { display:flex; align-items:center; gap:8px; padding:10px; color:#65676b; cursor:pointer; border-radius:8px; font-weight:600; }
-        .action-btn:hover { background:#f0f2f5; }
+        /* Các nút hành động (Ảnh, Cảm xúc) */
+        .post-actions { 
+            display: flex; 
+            justify-content: space-around; 
+        }
+
+        .action-btn { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 10px 20px; 
+            color: #65676b; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover { 
+            background: #f0f2f5; 
+        }
         
         .post { background:#fff; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
         .post-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
@@ -318,7 +381,6 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                     <img src="<?php echo getAvatarUrl(); ?>" class="user-avatar" alt="Avatar">
                     <div class="user-info">
                         <h3><?php echo htmlspecialchars($_SESSION['user_fullname']); ?></h3>
-                        <p>@<?php echo strtolower(str_replace(' ', '', $_SESSION['user_fullname'])); ?></p>
                     </div>
                 </div>
                 
@@ -331,17 +393,13 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                         <i class="fa-solid fa-user"></i>
                         <span>Trang cá nhân</span>
                     </div>
-                    <div class="menu-item" onclick="window.location.href='saved-posts.php'">
+                    <div class="menu-item" onclick="window.location.href='saved_posts.php'">
                         <i class="fa-solid fa-bookmark"></i>
                         <span>Đã lưu</span>
                     </div>
                     <div class="menu-item" onclick="window.location.href='friends.php'">
                         <i class="fa-solid fa-user-group"></i>
                         <span>Bạn bè</span>
-                    </div>
-                    <div class="menu-item">
-                        <i class="fa-solid fa-cog"></i>
-                        <span>Cài đặt</span>
                     </div>
                 </div>
             </div>
@@ -403,9 +461,6 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                         </button>
                         <button class="post-action-btn btn-show-comments">
                             <i class="fa-regular fa-comment"></i> Bình luận
-                        </button>
-                        <button class="post-action-btn">
-                            <i class="fa-solid fa-share"></i> Chia sẻ
                         </button>
                     </div>
 

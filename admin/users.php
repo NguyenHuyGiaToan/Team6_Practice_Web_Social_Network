@@ -100,8 +100,9 @@ $sql = "SELECT UserID, FullName, Email, Phone, Status, CreatedAt, Avatar FROM Us
 $params = [];
 
 if (!empty($search)) {
-    $sql .= " AND (FullName LIKE ? OR Email LIKE ?)";
+    $sql .= " AND (FullName LIKE ? OR Email LIKE ? OR Phone LIKE ?)";
     $search_term = "%$search%";
+    $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
 }
@@ -117,8 +118,8 @@ $sql .= " ORDER BY UserID, CreatedAt DESC LIMIT $limit OFFSET $offset";
 // Thực thi query
 $stmt = $conn->prepare($sql);
 if (!empty($search)) {
-    // two string params for the LIKE clauses
-    $stmt->bind_param('ss', $search_term, $search_term);
+    // three string params for the LIKE clauses
+    $stmt->bind_param('sss', $search_term, $search_term, $search_term);
 }
 $stmt->execute();
 $res = $stmt->get_result();
@@ -178,7 +179,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="logo">
-                <i class="fa-solid fa-shield-halved"></i>
+                <img src="../assets/images/avt.png">
                 <span>TSix Admin</span>
             </div>
 
@@ -243,7 +244,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                             <tr>
                                 <th>ID</th>
                                 <th>Người dùng</th>
-                                <th>Email</th>
+                                <th>Email/Phone</th>
                                 <th>Ngày tham gia</th>
                                 <th>Trạng thái</th>
                                 <th>Hành động</th>
@@ -265,13 +266,29 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                     <td style="font-weight: 600; color: #374151;"><?= htmlspecialchars($user['UserID']) ?></td>
                                     <td>
                                         <div class="user-info">
-                                            <img src="../uploads/avatars/<?= htmlspecialchars($user['Avatar'] ?? 'default_avatar.png', ENT_QUOTES) ?>"
-                                            class="user-avatar-small"
-                                            alt="Avatar">
+                                            <?php 
+                                                $avatarPath = "../uploads/avatars/" . $user['Avatar'];
+                                                  
+                                                if (!empty($user['Avatar']) && file_exists($avatarPath)) {
+                                                    $displayAvatar = $avatarPath;
+                                                } else {
+                                                    $displayAvatar = "../uploads/avatars/default_avatar.png";
+                                                }
+                                            ?>
+                                            
+                                            <img src="<?= htmlspecialchars($displayAvatar, ENT_QUOTES) ?>" 
+                                                class="user-avatar-small" 
+                                                alt="Avatar">
+                                                
                                             <span><?= htmlspecialchars($user['FullName'] ?? '', ENT_QUOTES) ?></span>
                                         </div>
                                     </td>
-                                    <td><?= htmlspecialchars($user['Email'] ?? '', ENT_QUOTES) ?></td>
+                                    <td>
+                                        <?php  
+                                            $displayContact = (!empty($user['Email'])) ? $user['Email'] : ($user['Phone'] ?? 'N/A');
+                                            echo htmlspecialchars($displayContact, ENT_QUOTES); 
+                                        ?>
+                                    </td>
                                     <td><?= date('d/m/Y', strtotime($user['CreatedAt'])) ?></td>
                                     <td>
                                         <?php if ($user['Status'] == 'active'): ?>

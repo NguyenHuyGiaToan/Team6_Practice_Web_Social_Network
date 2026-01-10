@@ -2,6 +2,7 @@
 // saved-posts.php
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/header.php'; 
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -49,213 +50,128 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
     <title>Đã lưu - TSix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN TỪ INDEX.PHP */
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background:#f0f2f5; color:#1c1e21; }
-        
-        .container { max-width:1200px; margin:0 auto; padding:0 20px; }
-        
-        .navbar {
-            background:#fff; height:60px; padding:0 16px;
-            display:flex; align-items:center; justify-content:space-between;
-            box-shadow:0 1px 2px rgba(0,0,0,0.1); position:sticky; top:0; z-index:1000;
-        }
-        .nav-left { display: flex; align-items: center; gap: 10px; }
-        .logo { color: #8B1E29; font-weight: 800; font-size: 2rem; letter-spacing: -1px; }
-        .search-box { background: #f0f2f5; padding: 10px 16px; border-radius: 50px; display: flex; align-items: center; width: 240px; }
-        .search-box input { border: none; background: transparent; outline: none; margin-left: 8px; font-size: 0.95rem; width: 100%; }
-        
-        .nav-center { display: flex; height: 100%; gap: 8px; }
-        .nav-item { padding: 0 35px; display: flex; align-items: center; height: 100%; color: #65676b; cursor: pointer; border-bottom: 3px solid transparent; font-size: 1.5rem; }
-        .nav-item:hover { background: #f2f2f2; border-radius: 8px; }
-        .nav-item.active { color: #8B1E29; border-bottom-color: #8B1E29; border-radius: 0; }
-        
-        .nav-right { display: flex; align-items: center; gap: 10px; }
-        .nav-icon-circle { width: 40px; height: 40px; background: #e4e6eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; }
-        .nav-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
-        
+        /* Bố cục chính */      
         .main-layout {
-            display:grid;
-            grid-template-columns:220px 1fr 320px;
-            gap:20px;
-            margin-top:20px;
+            display: grid;
+            grid-template-columns: 1000px 1fr 20px; 
+            gap: 30px; 
+            margin-top: 20px;
+            align-items: start;
         }
-        
-        .left-sidebar { background:#fff; border-radius:8px; padding:20px; }
-        .user-card { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-        .user-avatar { width:60px; height:60px; border-radius:50%; object-fit:cover; border:3px solid #1877f2; }
-        .user-info h3 { font-size:1.1rem; font-weight:600; }
-        .user-info p { color:#65676b; font-size:0.9rem; }
-        
-        .menu { margin-bottom:20px; }
-        .menu-item { display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; cursor:pointer; margin:4px 0; }
-        .menu-item:hover { background:#f0f2f5; }
-        .menu-item.active { background:#e7f3ff; color:#1877f2; font-weight:600; }
-        .menu-item i { width:24px; }
-        
-        .news-feed { background:#fff; border-radius:8px; padding:20px; }
-        
-        .post { border:1px solid #e4e6eb; border-radius:8px; padding:16px; margin-bottom:16px; }
-        .post-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-        .post-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; }
-        .post-user h4 { font-weight:600; font-size:0.95rem; }
-        .post-user .time { color:#65676b; font-size:0.8rem; }
-        
-        .post-content { margin-bottom:12px; line-height:1.5; }
-        .post-stats { display:flex; justify-content:space-between; color:#65676b; font-size:0.9rem; padding:8px 0; border-top:1px solid #e4e6eb; border-bottom:1px solid #e4e6eb; margin:10px 0; }
-        
-        .post-actions-row { display:flex; justify-content:space-around; padding-top:8px; }
-        .post-action-btn { display:flex; align-items:center; gap:8px; padding:8px 12px; color:#65676b; cursor:pointer; border-radius:4px; background:none; border:none; font-size:0.9rem; font-weight:600; width:100%; justify-content:center; }
-        .post-action-btn:hover { background:#f0f2f5; }
-        .post-action-btn.liked { color:#1877f2; }
-        .post-action-btn.saved { color:#ffc107; }
-        
-        .right-sidebar { background:#fff; border-radius:8px; padding:20px; }
-        .section { margin-bottom:24px; }
-        .section-title { font-size:1.1rem; font-weight:600; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #1877f2; }
-        
-        .friend { display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; margin-bottom:8px; }
-        .friend:hover { background:#f0f2f5; }
-        .friend-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; }
-        .friend-info { flex:1; }
-        .friend-name { font-weight:600; font-size:0.95rem; }
-        .friend-desc { color:#65676b; font-size:0.85rem; }
-        .add-btn { padding:6px 12px; background:#1877f2; color:white; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; }
-        
-        /* EF-03: Saved badge */
-        .saved-badge {
-            margin-left: auto;
-            background: #fff3cd;
-            color: #856404;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+
+        /* Nâng cấp News Feed (Khung chứa bài viết) */
+        .news-feed {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            min-height: 70vh; /* Đảm bảo khung luôn đủ cao */
+        }
+
+        /* Header khu vực bài viết đã lưu */
+        .feed-header {
+            border-bottom: 1px solid #f0f2f5;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .feed-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1c1e21;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 12px;
         }
-        
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
+
+        .feed-header h2 i {
+            color: #8B1E29; 
+        }
+
+        .feed-header p {
             color: #65676b;
+            font-size: 1rem;
+            font-weight: 500;
         }
-        .empty-icon {
-            font-size: 4rem;
-            color: #e4e6eb;
-            margin-bottom: 20px;
+
+        /* Nâng cấp giao diện từng bài viết */
+        .post {
+            border: 1px solid #f0f2f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
         }
-        .browse-btn {
-            display: inline-block;
-            margin-top: 15px;
-            background: #1877f2;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            text-decoration: none;
+
+        .post:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-color: #e4e6eb;
         }
+
         
-        @media (max-width: 1100px) {
-            .main-layout { grid-template-columns:280px 1fr; }
-            .right-sidebar { display:none; }
+        .saved-badge {
+            background: #f0f2f5;
+            color: #65676b;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
-        @media (max-width: 768px) {
-            .main-layout { grid-template-columns:1fr; }
-            .left-sidebar { display:none; }
-            .nav-item { padding:0 15px; }
-            .search-box { width:180px; }
+
+       
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .empty-icon-container {
+            width: 120px;
+            height: 120px;
+            background: #f0f2f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: #bcc0c4;
         }
     </style>
 </head>
 <body>
-    
-    <nav class="navbar">
-        <div class="nav-left">
-            <a href="index.php" class="logo">TSix</a>
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass" style="color: #65676b"></i>
-                <input type="text" placeholder="Tìm kiếm bài đã lưu">
-            </div>
-        </div>
-        <div class="nav-center">
-            <div class="nav-item"><i class="fas fa-home"></i></div>
-            <div class="nav-item active"><i class="fas fa-bookmark"></i></div>
-        </div>
-        
-        
-        <div class="nav-right">
-            <div class="nav-icon-circle"><i class="fas fa-bars"></i></div>
-            <div class="nav-icon-circle"><i class="fab fa-facebook-messenger"></i></div>
-            <div class="nav-icon-circle"><i class="fas fa-bell"></i></div>
-            
-            <img src="uploads/avatars/<?php echo $current_user['Avatar'] ?: 'default_avatar.png'; ?>" 
-                 class="nav-avatar" 
-                 onclick="window.location.href='profile.php'">
-        </div>
-    </nav>
 
     <!-- Main Content -->
     <div class="container">
         <div class="main-layout">
-            
-            <!-- Left Sidebar -->
-            <div class="left-sidebar">
-                <div class="user-card">
-                    <img src="uploads/avatars/<?php echo $current_user['Avatar'] ?: 'default_avatar.png'; ?>" class="user-avatar">
-                    <div class="user-info">
-                        <h3><?php echo htmlspecialchars($current_user['FullName']); ?></h3>
-                        <p>@<?php echo strtolower(str_replace(' ', '', $current_user['FullName'])); ?></p>
-                    </div>
-                </div>
-                
-                <div class="menu">
-                    <div class="menu-item" onclick="window.location.href='index.php'">
-                        <i class="fas fa-home"></i>
-                        <span>Bảng tin</span>
-                    </div>
-                    <div class="menu-item" onclick="window.location.href='profile.php'">
-                        <i class="fas fa-user"></i>
-                        <span>Trang cá nhân</span>
-                    </div>
-                    <div class="menu-item active">
-                        <i class="fas fa-bookmark"></i>
-                        <span>Đã lưu</span>
-                    </div>
-                    <div class="menu-item">
-                        <i class="fas fa-user-friends"></i>
-                        <span>Bạn bè</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- News Feed -->
             <div class="news-feed">
                 <!-- Header -->
-                <div style="border-bottom:1px solid #e4e6eb; padding-bottom:20px; margin-bottom:20px;">
-                    <h2 style="font-size:1.5rem; color:#1c1e21; display:flex; align-items:center; gap:10px;">
-                        <i class="fas fa-bookmark"></i> Bài viết đã lưu
-                    </h2>
-                    <p style="color:#65676b; font-size:0.9rem; margin-top:5px;">
-                        <?php echo count($saved_posts); ?> bài viết
-                    </p>
+                <div class="feed-header">
+                    <h2><i class="fas fa-bookmark"></i> Bài viết đã lưu</h2>
+                    <p><?php echo count($saved_posts); ?> Bài viết</p>
                 </div>
                 
                 <!-- EF-03: Danh sách bài viết đã lưu -->
                 <?php if (empty($saved_posts)): ?>
                     <div class="empty-state">
-                        <div class="empty-icon"><i class="fas fa-bookmark"></i></div>
-                        <h3>Chưa có bài viết nào được lưu</h3>
-                        <p>Khi bạn lưu bài viết, chúng sẽ xuất hiện ở đây.</p>
-                        <a href="index.php" class="browse-btn">
-                            <i class="fas fa-newspaper"></i> Duyệt bài viết
-                        </a>
+                        <div class="empty-icon-container">
+                            <i class="fas fa-bookmark" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3>Kho lưu trữ đang trống</h3>
+                        <p>Hãy lưu lại những bài viết thú vị từ bảng tin để có thể xem lại tại đây bất cứ lúc nào.</p>
+                        <a href="index.php" class="browse-btn" style="margin-top: 20px; padding: 12px 25px; background: #1877f2; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">Khám phá bảng tin ngay</a>
                     </div>
                 <?php else: ?>
                     <?php foreach ($saved_posts as $post): ?>
                     <div class="post" id="post-<?php echo $post['PostID']; ?>">
                         <div class="post-header">
-                            <img src="uploads/avatars/<?php echo $post['Avatar'] ?: 'default_avatar.png'; ?>" class="post-avatar">
+                            <img src="<?php echo BASE_URL; ?>uploads/avatars/<?php echo $post['Avatar'] ?: 'default_avatar.png'; ?>" class="post-avatar">
                             <div class="post-user">
                                 <h4><?php echo htmlspecialchars($post['FullName']); ?></h4>
                                 <div class="time"><?php echo date('d/m/Y H:i', strtotime($post['CreatedAt'])); ?></div>
@@ -271,7 +187,7 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
                         
                         <?php if (!empty($post['ImageUrl'])): ?>
                         <div style="margin:10px 0;">
-                            <img src="uploads/posts/<?php echo $post['ImageUrl']; ?>" 
+                            <img src="<?php echo BASE_URL; ?>uploads/posts/<?php echo $post['ImageUrl']; ?>" 
                                  style="width:100%; max-height:500px; object-fit:cover; border-radius:8px;">
                         </div>
                         <?php endif; ?>

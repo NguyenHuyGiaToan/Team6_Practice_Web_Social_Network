@@ -218,9 +218,94 @@ th,td {
     border-bottom: 1px solid lightgray;
 
 }
+/* User info */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar-small {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%; 
+    object-fit: cover;  
+    border: 1px solid #eee;
+}
 
 
 /* TOP POST  */
+/* Container chung cho danh sách */
+.top_post_list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Thẻ link bao ngoài */
+.top_post_item_link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: background 0.3s;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.top_post_item_link:hover {
+    background-color: #f8f9fa;
+}
+
+/* Layout của từng bài viết */
+.top_post_container {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+/* Khung chứa ảnh để cố định kích thước */
+.top_post_img_wrapper {
+    width: 100px;
+    height: 80px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 5px;
+    background-color: #eee;
+}
+
+.top_post_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Giới hạn nội dung bài viết nếu quá dài */
+.post-content-preview {
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.post-time {
+    font-size: 12px;
+    color: #888;
+}
+
+.top_post_stats {
+    margin-top: 5px;
+    display: flex;
+    gap: 10px;
+    color: #555;
+    font-size: 13px;
+}
+
+.post-divider:last-child {
+    display: none; /* Ẩn đường kẻ cuối cùng */
+}
 .top_post_container {
     display: grid;
     grid-template-columns: 150px auto;
