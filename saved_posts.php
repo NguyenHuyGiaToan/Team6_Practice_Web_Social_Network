@@ -53,24 +53,29 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
         /* Bố cục chính */      
         .main-layout {
             display: grid;
-            grid-template-columns: 1000px 1fr 20px; 
-            gap: 30px; 
-            margin-top: 20px;
+            grid-template-columns: 800px 1fr 20px; 
+            gap: 25px; 
+            margin: 20px auto;
+            max-width: 1100px;
             align-items: start;
+            justify-content: center;
         }
 
         /* Nâng cấp News Feed (Khung chứa bài viết) */
         .news-feed {
             background: #fff;
             border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            min-height: 70vh; /* Đảm bảo khung luôn đủ cao */
+            padding: 16px;
+            margin: 20px auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-height: 70vh; 
+            max-width: 680px;
+            border: #8B1E29 1px solid;
         }
 
         /* Header khu vực bài viết đã lưu */
         .feed-header {
-            border-bottom: 1px solid #f0f2f5;
+            border-bottom: 1px solid #8B1E29;
             padding-bottom: 20px;
             margin-bottom: 24px;
             display: flex;
@@ -97,31 +102,109 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
             font-weight: 500;
         }
 
-        /* Nâng cấp giao diện từng bài viết */
+        /* Container chính cho bài viết */
         .post {
-            border: 1px solid #f0f2f5;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            transition: all 0.3s ease;
+            background: #fff;
+            border: 1px solid #dddfe2;
+            border-radius: 8px;
+            width: 600px;
+            padding: 12px 0 0 0; /* Bỏ padding ngang để ảnh tràn viền */
+            margin-bottom: 16px;
         }
 
-        .post:hover {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            border-color: #e4e6eb;
+        /* Header bài viết */
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px 12px 12px;
         }
 
-        
-        .saved-badge {
-            background: #f0f2f5;
-            color: #65676b;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* FIX LỖI AVATAR QUÁ TO */
+        .post-avatar {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .post-user h4 {
+            margin: 0;
+            font-size: 15px;
             font-weight: 600;
         }
 
-       
+        .post-user .time {
+            font-size: 13px;
+            color: #65676b;
+        }
+
+        /* Nội dung văn bản */
+        .post-content {
+            padding: 0 12px 12px 12px;
+            font-size: 15px;
+        }
+
+        /* Ảnh bài viết tràn viền */
+        .post-images {
+            width: 100%;
+            border-top: 1px solid #ebedf0;
+            border-bottom: 1px solid #ebedf0;
+        }
+
+        .post-images img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Thống kê Like/Comment */
+        .post-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid #ebedf0;
+            font-size: 14px;
+            color: #65676B;
+        }
+
+        /* Nút tương tác */
+        .post-actions-row {
+            display: flex;
+            padding: 4px 12px;
+        }
+
+        .post-action-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px;
+            color: #65676b;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .post-action-btn:hover {
+            background: #f2f2f2;
+            border-radius: 4px;
+        }
+
+        .saved-badge-top {
+            color: #65676b;
+            font-size: 13px;
+        }
+    
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -171,12 +254,14 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
                     <?php foreach ($saved_posts as $post): ?>
                     <div class="post" id="post-<?php echo $post['PostID']; ?>">
                         <div class="post-header">
-                            <img src="<?php echo BASE_URL; ?>uploads/avatars/<?php echo $post['Avatar'] ?: 'default_avatar.png'; ?>" class="post-avatar">
-                            <div class="post-user">
-                                <h4><?php echo htmlspecialchars($post['FullName']); ?></h4>
-                                <div class="time"><?php echo date('d/m/Y H:i', strtotime($post['CreatedAt'])); ?></div>
+                            <div class="header-left">
+                                <img src="<?php echo BASE_URL ?>/uploads/avatars/<?php echo $post['Avatar'] ?: 'default_avatar.png'; ?>" class="post-avatar">
+                                <div class="post-user">
+                                    <h4><?php echo htmlspecialchars($post['FullName']); ?></h4>
+                                    <div class="time"><?php echo date('d/m/Y H:i', strtotime($post['CreatedAt'])); ?> <i class="fas fa-globe-asia"></i></div>
+                                </div>
                             </div>
-                            <div class="saved-badge">
+                            <div class="saved-badge-top">
                                 <i class="fas fa-bookmark"></i> Đã lưu
                             </div>
                         </div>
@@ -186,30 +271,28 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
                         </div>
                         
                         <?php if (!empty($post['ImageUrl'])): ?>
-                        <div style="margin:10px 0;">
-                            <img src="<?php echo BASE_URL; ?>uploads/posts/<?php echo $post['ImageUrl']; ?>" 
-                                 style="width:100%; max-height:500px; object-fit:cover; border-radius:8px;">
+                        <div class="post-images">
+                            <img src="<?php echo BASE_URL ?>/uploads/posts/<?php echo $post['ImageUrl']; ?>">
                         </div>
                         <?php endif; ?>
                         
                         <div class="post-stats">
-                            <div>
-                                <i class="fas fa-thumbs-up" style="color:#1877f2; font-size:12px;"></i>
-                                <?php echo $post['LikeCount']; ?>
+                            <div class="stats-left">
+                                <i class="fas fa-thumbs-up" style="color:#e0245e;"></i> <span><?php echo $post['LikeCount']; ?></span>
                             </div>
-                            <div><?php echo $post['CommentCount']; ?> bình luận</div>
+                            <div class="stats-right">
+                                <?php echo $post['CommentCount']; ?> bình luận
+                            </div>
                         </div>
                         
                         <div class="post-actions-row">
-                            <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" 
-                                    onclick="likePost(this, <?php echo $post['PostID']; ?>)">
-                                <i class="far fa-thumbs-up"></i> 
-                                <?php echo $post['user_liked'] ? 'Đã thích' : 'Thích'; ?>
+                            <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" onclick="likePost(this, <?php echo $post['PostID']; ?>)">
+                                <i class="far fa-thumbs-up"></i> Thích
                             </button>
                             <button class="post-action-btn" onclick="commentPost(<?php echo $post['PostID']; ?>)">
                                 <i class="far fa-comment"></i> Bình luận
                             </button>
-                            <button class="post-action-btn saved" onclick="unsavePost(<?php echo $post['PostID']; ?>)">
+                            <button class="post-action-btn" onclick="unsavePost(<?php echo $post['PostID']; ?>)">
                                 <i class="fas fa-bookmark"></i> Bỏ lưu
                             </button>
                         </div>

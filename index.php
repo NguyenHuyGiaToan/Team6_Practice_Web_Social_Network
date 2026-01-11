@@ -116,8 +116,7 @@ $friends_query = "
     SELECT 
         u.UserID, 
         u.FullName, 
-        u.Avatar,
-        'Đại học Ngân hàng TPHCM' AS info
+        u.Avatar
     FROM Users u
     WHERE u.UserID != ?
       AND u.Status = 'active'
@@ -129,7 +128,7 @@ $friends_query = "
           SELECT FK_FollowerID FROM FOLLOWS WHERE FK_FollowingID = ?
       )
     ORDER BY RAND()
-    LIMIT 5
+    LIMIT 10
 ";
 
 $friends_stmt = mysqli_prepare($conn, $friends_query);
@@ -137,13 +136,14 @@ mysqli_stmt_bind_param($friends_stmt, "iii", $user_id, $user_id, $user_id);
 mysqli_stmt_execute($friends_stmt);
 $friends_result = mysqli_stmt_get_result($friends_stmt);
 
-$friends = [];
+$suggestions = []; 
 while ($friend = mysqli_fetch_assoc($friends_result)) {
+    // Xử lý đường dẫn avatar
     $friend['avatar_url'] = !empty($friend['Avatar'])
         ? BASE_URL . 'uploads/avatars/' . htmlspecialchars($friend['Avatar'])
         : 'https://ui-avatars.com/api/?name=' . urlencode($friend['FullName']) . '&background=8B1E29&color=fff&size=200';
     
-    $friends[] = $friend;
+    $suggestions[] = $friend; 
 }
 
 
@@ -168,7 +168,7 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         /* Main Layout */
         .main-layout {
             display:grid;
-            grid-template-columns:280px 1fr 320px;
+            grid-template-columns:280px 1fr 340px;
             gap:20px;
             margin-top:20px;
         }
@@ -182,7 +182,7 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         
         .menu { margin-bottom:20px; }
         .menu-item { display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; cursor:pointer; margin:4px 0; }
-        .menu-item:hover { background:#f0f2f5; }
+        .menu-item:hover { background:#8B1E29; }
         .menu-item.active { background:#e7f3ff; color:#8B1E29; font-weight:600; }
         .menu-item i { width:24px; font-size:1.2rem; }
         
@@ -259,7 +259,7 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         }
 
         .action-btn:hover { 
-            background: #f0f2f5; 
+            background: #8B1E29; 
         }
         
         .post { background:#fff; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
@@ -281,14 +281,57 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         .section { margin-bottom:24px; }
         .section-title { font-size:1.1rem; font-weight:600; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #8B1E29; }
         
-        .friend { display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; margin-bottom:8px; cursor:pointer; }
+        .friend {
+            display: flex;
+            align-items: center; /* Căn giữa tất cả thành phần theo chiều dọc */
+            justify-content: space-between;
+            padding: 8px 0;
+            gap: 12px;
+            border-bottom: 1px solid #f0f2f5; /* Tùy chọn: tạo đường kẻ mờ phân cách */
+        }
+
+        .friend-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1; /* Chiếm không gian còn lại để đẩy nút về bên phải */
+            min-width: 0; /* Quan trọng: cho phép nội dung bên trong co lại nếu quá dài */
+        }
         .friend:hover { background:#f0f2f5; }
         .friend-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; }
-        .friend-info { flex:1; }
-        .friend-name { font-weight:600; font-size:0.95rem; }
-        .friend-desc { color:#65676b; font-size:0.85rem; }
-        .add-btn { padding:6px 12px; background:#8B1E29; color:white; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600; }
-        .add-btn:hover { background:#70171f; }
+        .friend-info {
+            display: flex;
+            flex-direction: column;
+            /* Độ rộng này tùy thuộc vào sidebar của bạn, 
+            nhưng nên cố định để các nút bên cạnh không bị di dịch */
+            width: 150px; 
+            flex-shrink: 0; /* Không cho phép khung văn bản co lại thêm */
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #050505;
+            white-space: nowrap; /* Không cho xuống dòng */
+            overflow: hidden; /* Ẩn phần dư thừa */
+            text-overflow: ellipsis; /* Hiện dấu ... */
+        }
+        .btn-follow {
+            margin-left: auto; /* Đẩy nút về sát mép bên phải sidebar */
+            min-width: 100px;
+            height: 34px;
+            padding: 0 10px;
+            background: #8B1E29;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .btn-follow:hover {
+            background: #70171f;
+        }
 
         /* Responsive */
         @media (max-width: 1100px) {
@@ -491,24 +534,37 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
 <?php endif; ?>
             </div>
 
-            <!-- Right Sidebar -->
             <div class="right-sidebar">
                 <div class="section">
                     <div class="section-title">Gợi ý kết bạn</div>
-                    <?php foreach($friends as $friend): ?>
-                    <div class="friend">
-                        <img src="<?php echo $friend['avatar_url']; ?>" class="friend-avatar" alt="Avatar">
-                        <div class="friend-info">
-                            <div class="friend-name"><?php echo htmlspecialchars($friend['FullName']); ?></div>
-                            <div class="friend-desc"><?php echo htmlspecialchars($friend['info']); ?></div>
-                        </div>
-                        <button class="add-btn" data-user-id="<?php echo $friend['UserID']; ?>">
-                            + Theo dõi
-                        </button>
-                    </div>
-                    <?php endforeach; ?>
-                    <div style="text-align:right; margin-top:10px;">
-                        <a href="friends.php" style="color:#8B1E29; font-size:0.9rem; font-weight:600;">Xem tất cả →</a>
+                    
+                    <?php if (empty($suggestions)): ?>
+                        <p style="color:#65676b; font-size:0.9rem;">Không có gợi ý mới.</p>
+                    <?php else: ?>
+                        <?php foreach ($suggestions as $sug): ?>
+                            <div class="friend" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <img src="<?php echo $sug['avatar_url']; ?>" 
+                                        onerror="this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($sug['FullName']); ?>&background=8B1E29&color=fff'"
+                                        class="friend-avatar" alt="Avatar" 
+                                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                    
+                                    <div class="friend-info">
+                                        <?php echo htmlspecialchars($sug['FullName']); ?>
+                                    </div>
+                                </div>
+                                
+                                <button id="follow-btn-sidebar-<?php echo $sug['UserID']; ?>" 
+                                        class="btn-follow" 
+                                        onclick="handleFollowSidebar(<?php echo $sug['UserID']; ?>)">
+                                    + Theo dõi
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <div style="text-align:right; margin-top:10px; border-top: 1px solid #e4e6eb; padding-top: 10px;">
+                        <a href="friends.php" style="color:#8B1E29; font-size:0.85rem; font-weight:600; text-decoration: none;">Xem tất cả →</a>
                     </div>
                 </div>
             </div>
@@ -652,6 +708,42 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
             const countEl = post.querySelector('.comment-count');
             let count = parseInt(countEl.textContent);
             countEl.textContent = increase ? count + 1 : count - 1;
+        }
+
+        function handleFollowSidebar(userId) {
+            const btn = document.getElementById('follow-btn-sidebar-' + userId);
+            if (!btn) return;
+
+            // Hiệu ứng chờ
+            const originalText = btn.innerText;
+            btn.innerText = '...';
+            btn.disabled = true;
+
+            // Gửi yêu cầu AJAX
+            fetch('friends_action.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `target_id=${userId}&action=send_request`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Đổi trạng thái nút thành công
+                    btn.innerText = 'Đã gửi yêu cầu';
+                    btn.style.background = '#f0f2f5';
+                    btn.style.color = '#bcc0c4';
+                    btn.onclick = null; // Chặn bấm lại
+                } else {
+                    alert(data.message);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi:', err);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
