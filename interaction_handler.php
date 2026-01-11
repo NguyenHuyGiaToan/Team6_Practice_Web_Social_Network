@@ -28,15 +28,18 @@ switch ($action) {
             exit();
         }
 
-        // Kiểm tra bài viết có tồn tại và active không
-        $check_post = mysqli_prepare($conn, "SELECT PostID FROM POSTS WHERE PostID = ? AND Status = 'active'");
-        mysqli_stmt_bind_param($check_post, "i", $post_id);
-        mysqli_stmt_execute($check_post);
-        mysqli_stmt_store_result($check_post);
-        if (mysqli_stmt_num_rows($check_post) == 0) {
+        // Lấy thông tin bài viết (Xác định tồn tại và lấy ID chủ bài viết)
+        $post_info_stmt = mysqli_prepare($conn, "SELECT FK_UserID FROM POSTS WHERE PostID = ? AND Status = 'active'");
+        mysqli_stmt_bind_param($post_info_stmt, "i", $post_id);
+        mysqli_stmt_execute($post_info_stmt);
+        $post_info_res = mysqli_stmt_get_result($post_info_stmt);
+        $post_data = mysqli_fetch_assoc($post_info_res);
+
+        if (!$post_data) {
             echo json_encode(['success' => false, 'message' => 'Bài viết không tồn tại.']);
             exit();
         }
+        $post_owner_id = $post_data['FK_UserID'];
 
         // Kiểm tra đã like chưa
         $check_like = mysqli_prepare($conn, "SELECT FK_UserID FROM LIKES WHERE FK_PostID = ? AND FK_UserID = ?");
@@ -50,8 +53,9 @@ switch ($action) {
             mysqli_stmt_bind_param($unlike, "ii", $post_id, $user_id);
             mysqli_stmt_execute($unlike);
 
-            // Giảm LikeCount trong bảng POSTS
-            mysqli_query($conn, "UPDATE POSTS SET LikeCount = LikeCount - 1 WHERE PostID = $post_id");
+            $update = mysqli_prepare($conn, "UPDATE POSTS SET LikeCount = GREATEST(LikeCount - 1, 0) WHERE PostID = ?");
+            mysqli_stmt_bind_param($update, "i", $post_id);
+            mysqli_stmt_execute($update);
 
             $new_count = max(0, getPostLikeCount($post_id, $conn));
             echo json_encode([
@@ -66,8 +70,12 @@ switch ($action) {
             mysqli_stmt_bind_param($like, "ii", $user_id, $post_id);
             mysqli_stmt_execute($like);
 
-            // Tăng LikeCount trong bảng POSTS
-            mysqli_query($conn, "UPDATE POSTS SET LikeCount = LikeCount + 1 WHERE PostID = $post_id");
+            $update = mysqli_prepare($conn, "UPDATE POSTS SET LikeCount = LikeCount + 1 WHERE PostID = ?");
+            mysqli_stmt_bind_param($update, "i", $post_id);
+            mysqli_stmt_execute($update);
+
+            
+            createNotification($conn, $post_owner_id, $user_id, 'Like', $post_id);
 
             $new_count = getPostLikeCount($post_id, $conn);
             echo json_encode([
@@ -89,15 +97,18 @@ switch ($action) {
             exit();
         }
 
-        // Kiểm tra bài viết tồn tại
-        $check = mysqli_prepare($conn, "SELECT PostID FROM POSTS WHERE PostID = ? AND Status = 'active'");
-        mysqli_stmt_bind_param($check, "i", $post_id);
-        mysqli_stmt_execute($check);
-        mysqli_stmt_store_result($check);
-        if (mysqli_stmt_num_rows($check) == 0) {
+        // Kiểm tra bài viết và lấy ID chủ bài viết
+        $check_stmt = mysqli_prepare($conn, "SELECT FK_UserID FROM POSTS WHERE PostID = ? AND Status = 'active'");
+        mysqli_stmt_bind_param($check_stmt, "i", $post_id);
+        mysqli_stmt_execute($check_stmt);
+        $check_res = mysqli_stmt_get_result($check_stmt);
+        $post_data = mysqli_fetch_assoc($check_res);
+
+        if (!$post_data) {
             echo json_encode(['success' => false, 'message' => 'Bài viết không tồn tại.']);
             exit();
         }
+        $post_owner_id = $post_data['FK_UserID'];
 
         // Thêm bình luận
         $insert = mysqli_prepare($conn, "
@@ -109,13 +120,14 @@ switch ($action) {
 
         if ($success) {
             $comment_id = mysqli_insert_id($conn);
+            $update = mysqli_prepare($conn, "UPDATE POSTS SET CommentCount = CommentCount + 1 WHERE PostID = ?");
+            mysqli_stmt_bind_param($update, "i", $post_id);
+            mysqli_stmt_execute($update);
 
-            // Tăng CommentCount
-            mysqli_query($conn, "UPDATE POSTS SET CommentCount = CommentCount + 1 WHERE PostID = $post_id");
+            // --- [THÊM CODE THÔNG BÁO COMMENT] ---
+            createNotification($conn, $post_owner_id, $user_id, 'Comment', $post_id);
 
-            // Lấy thông tin bình luận vừa thêm để trả về
             $new_comment = getCommentById($comment_id, $conn, $user_id);
-
             echo json_encode([
                 'success' => true,
                 'comment' => $new_comment,
@@ -125,6 +137,7 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Lỗi khi thêm bình luận.']);
         }
         break;
+
 
     // ================== SỬA BÌNH LUẬN ==================
     case 'edit_comment':
@@ -192,6 +205,7 @@ switch ($action) {
         if ($success) {
             // Giảm CommentCount
             mysqli_query($conn, "UPDATE POSTS SET CommentCount = CommentCount - 1 WHERE PostID = $post_id");
+            
         }
 
         echo json_encode([

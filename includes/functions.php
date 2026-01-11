@@ -65,4 +65,22 @@ function filterBadWords($text) {
     $badWords = ['tu_nhay_cam_1', 'tu_nhay_cam_2']; // Trọng Minh cập nhật mảng này
     return str_ireplace($badWords, '***', $text);
 }
+
+// 6. Hàm tạo thông báo
+function createNotification($conn, $receiver_id, $actor_id, $type, $reference_id = null, $message = '') {
+    // 1. Không thông báo nếu tự like/comment bài của chính mình
+    if ($receiver_id == $actor_id) {
+        return;
+    }
+
+    // 2. Chuẩn bị câu lệnh SQL
+    $sql = "INSERT INTO NOTIFICATIONS (FK_UserID, ActorID, Type, ReferenceID, Message, CreatedAt) 
+            VALUES (?, ?, ?, ?, ?, NOW())";
+    
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "iisss", $receiver_id, $actor_id, $type, $reference_id, $message);
+    
+    // 3. Thực thi
+    mysqli_stmt_execute($stmt);
+}
 ?>

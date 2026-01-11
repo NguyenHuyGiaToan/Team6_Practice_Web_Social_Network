@@ -8,6 +8,7 @@ ob_start();
 
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '/includes/functions.php';
 
 ob_clean();
 
@@ -31,11 +32,18 @@ $response = ['success' => false, 'message' => 'Lỗi chưa xác định'];
 
 switch ($action) {
     case 'send_request':
+        // Kiểm tra xem đã gửi yêu cầu hoặc đã follow chưa
         $check = mysqli_query($conn, "SELECT * FROM FOLLOWS WHERE FK_FollowerID = $user_id AND FK_FollowingID = $target_id");
+        
         if (mysqli_num_rows($check) == 0) {
             $stmt = mysqli_prepare($conn, "INSERT INTO FOLLOWS (FK_FollowerID, FK_FollowingID, FollowedAt, Status) VALUES (?, ?, NOW(), 'pending')");
             mysqli_stmt_bind_param($stmt, "ii", $user_id, $target_id);
+            
             if (mysqli_stmt_execute($stmt)) {
+                // createNotification($conn, Người nhận, Người gửi, Loại, ID tham chiếu, Tin nhắn)
+                // Trong trường hợp Follow, ReferenceID có thể để null
+                createNotification($conn, $target_id, $user_id, 'Follow', null);
+
                 $response = ['success' => true, 'text' => 'Đã gửi yêu cầu'];
             } else {
                 $response = ['success' => false, 'message' => 'Lỗi DB: ' . mysqli_error($conn)];
@@ -50,8 +58,11 @@ switch ($action) {
         // User_id: Là bạn, người đang nhấn chấp nhận (following)
         $stmt = mysqli_prepare($conn, "UPDATE FOLLOWS SET Status = 'accepted' WHERE FK_FollowerID = ? AND FK_FollowingID = ?");
         mysqli_stmt_bind_param($stmt, "ii", $target_id, $user_id); 
-        
+
         if (mysqli_stmt_execute($stmt)) {
+
+            createNotification($conn, $target_id, $user_id, 'AcceptFollow', null);
+
             echo json_encode(['success' => true, 'message' => 'Đã đồng ý']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Lỗi cập nhật database']);
@@ -62,6 +73,8 @@ switch ($action) {
         $stmt = mysqli_prepare($conn, "DELETE FROM FOLLOWS WHERE FK_FollowerID = ? AND FK_FollowingID = ? AND Status = 'pending'");
         mysqli_stmt_bind_param($stmt, "ii", $target_id, $user_id);
         if (mysqli_stmt_execute($stmt)) {
+
+            createNotification($conn, $target_id, $user_id, 'DeclineFollow', null);
             $response = ['success' => true];
         }
         break;
@@ -70,6 +83,8 @@ switch ($action) {
         $stmt = mysqli_prepare($conn, "DELETE FROM FOLLOWS WHERE FK_FollowerID = ? AND FK_FollowingID = ?");
         mysqli_stmt_bind_param($stmt, "ii", $user_id, $target_id);
         if (mysqli_stmt_execute($stmt)) {
+
+            createNotification($conn, $target_id, $user_id, 'Unfollow', null);
             $response = ['success' => true];
         }
         break;

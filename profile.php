@@ -730,12 +730,14 @@ function getCurrentUserAvatar($conn, $uid) {
 
                             <div class="post-actions-row" style="display:flex; padding-top:8px;">
                                 <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" 
-                                        data-post-id="<?php echo $post['PostID']; ?>"
+                                        onclick="toggleLike(this, <?php echo $post['PostID']; ?>)"
                                         style="flex:1; background:none; border:none; padding:8px; cursor:pointer; font-weight:600; color: #65676b; display:flex; align-items:center; justify-content:center; gap:8px;">
                                     <i class="fa-regular fa-thumbs-up"></i> 
                                     <span><?php echo $post['user_liked'] ? 'Đã thích' : 'Thích'; ?></span>
                                 </button>
+
                                 <button class="post-action-btn btn-show-comments"
+                                        onclick="toggleCommentSection(this)"
                                         style="flex:1; background:none; border:none; padding:8px; cursor:pointer; font-weight:600; color: #65676b; display:flex; align-items:center; justify-content:center; gap:8px;">
                                     <i class="fa-regular fa-comment"></i> Bình luận
                                 </button>
@@ -887,46 +889,49 @@ function getCurrentUserAvatar($conn, $uid) {
 
     // --- 3. XỬ LÝ LIKE & COMMENT (AJAX) ---
     
-    // Like Post
-    document.querySelectorAll('.post-action-btn[data-post-id]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const postId = this.dataset.postId;
-            if (!postId) return; // Nếu là nút bình luận thì bỏ qua
+    // --- XỬ LÝ LIKE ---
+    function toggleLike(btn, postId) {
+        // Chống click liên tục khi đang xử lý
+        if (btn.disabled) return;
+        btn.disabled = true;
 
-            fetch('interaction_handler.php', { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `action=toggle_like&post_id=${postId}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    this.classList.toggle('liked', data.liked);
-                    this.querySelector('span').textContent = data.liked ? 'Đã thích' : 'Thích';
-                    // Cập nhật số like
-                    const statRow = this.closest('.post').querySelector('.like-count');
-                    if (statRow) statRow.textContent = data.like_count;
-                }
-            });
-        });
-    });
+        fetch('interaction_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=toggle_like&post_id=${postId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false; // Mở khóa nút
+            if (data.success) {
+                btn.classList.toggle('liked', data.liked);
+                btn.querySelector('span').textContent = data.liked ? 'Đã thích' : 'Thích';
+                
+                // Cập nhật con số hiển thị
+                const likeCountEl = btn.closest('.post').querySelector('.like-count');
+                if (likeCountEl) likeCountEl.textContent = data.like_count;
+            }
+        })
+        .catch(() => { btn.disabled = false; });
+    }
 
-    // Show/Hide Comments
-    document.querySelectorAll('.btn-show-comments').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const section = this.closest('.post').querySelector('.comments-section');
-            const list = section.querySelector('.comments-list');
-            const postId = list.dataset.postId;
+    // --- XỬ LÝ ẨN/HIỆN KHUNG BÌNH LUẬN ---
+    function toggleCommentSection(btn) {
+        const postContainer = btn.closest('.post');
+        const section = postContainer.querySelector('.comments-section');
+        const list = section.querySelector('.comments-list');
+        const postId = list.dataset.postId;
 
-            if (section.style.display === 'block') {
-                section.style.display = 'none';
-            } else {
-                section.style.display = 'block';
+        if (section.style.display === 'block') {
+            section.style.display = 'none';
+        } else {
+            section.style.display = 'block';
+            // Chỉ tải dữ liệu nếu khung đang trống hoặc đang ở trạng thái 'Đang tải'
+            if (list.innerHTML.includes('Đang tải') || list.innerHTML.trim() === '') {
                 loadComments(postId, list);
             }
-        });
-    });
-
+        }
+    }
     // Send Comment
     document.querySelectorAll('.send-comment').forEach(btn => {
         btn.addEventListener('click', function() {

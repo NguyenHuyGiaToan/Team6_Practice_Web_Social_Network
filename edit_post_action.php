@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
                     // Lấy tên file để xóa trong thư mục
                     $get_img = mysqli_query($conn, "SELECT ImageUrl FROM Post_Images WHERE ImageID = $img_id");
                     if ($img_row = mysqli_fetch_assoc($get_img)) {
-                        $path = "C:/wamp64/www/web-social-network/uploads/posts/" . $img_row['ImageUrl'];
+                        $path = "../uploads/posts/" . $img_row['ImageUrl'];
                         if (file_exists($path)) unlink($path);
                     }
                     mysqli_query($conn, "DELETE FROM Post_Images WHERE ImageID = $img_id");

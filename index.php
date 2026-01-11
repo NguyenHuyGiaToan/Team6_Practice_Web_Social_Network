@@ -93,7 +93,7 @@ while ($post = mysqli_fetch_assoc($posts_result)) {
 // 3. Lấy hình ảnh cho từng bài viết (nếu có)
 foreach ($posts as &$post) {
     $img_stmt = mysqli_prepare($conn, "
-        SELECT ImageUrl 
+        SELECT ImageUrl, ImageID
         FROM POST_IMAGES 
         WHERE FK_PostID = ? 
         ORDER BY ImageID 
@@ -104,8 +104,10 @@ foreach ($posts as &$post) {
     $img_result = mysqli_stmt_get_result($img_stmt);
 
     $post['images'] = [];
+    $post['image_ids'] = []; // Để dùng cho việc xóa ảnh khi edit
     while ($img = mysqli_fetch_assoc($img_result)) {
         $post['images'][] = BASE_URL . 'uploads/posts/' . htmlspecialchars($img['ImageUrl']);
+        $post['image_ids'][] = $img['ImageID'];
     }
 }
 unset($post); 
@@ -577,12 +579,16 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                     </div>
 
                     <div class="post-actions-row">
-                        <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" 
+                       <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" 
+                                data-action="toggle-like" 
                                 data-post-id="<?php echo $post['PostID']; ?>">
                             <i class="fa-regular fa-thumbs-up"></i> 
                             <span><?php echo $post['user_liked'] ? 'Đã thích' : 'Thích'; ?></span>
                         </button>
-                        <button class="post-action-btn btn-show-comments">
+
+                        <button class="post-action-btn btn-show-comments" 
+                                data-action="toggle-comments" 
+                                data-post-id="<?php echo $post['PostID']; ?>">
                             <i class="fa-regular fa-comment"></i> Bình luận
                         </button>
                     </div>
@@ -595,7 +601,10 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                         <div class="comment-form" style="display:flex; gap:8px; margin-top:12px;">
                             <img src="<?php echo getAvatarUrl(); ?>" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
                             <input type="text" class="comment-input" placeholder="Viết bình luận..." style="flex:1; padding:10px; border-radius:20px; border:1px solid #ccd0d5; outline:none;">
-                            <button class="send-comment" style="background:none; border:none; color:#8B1E29; font-size:1.2rem; cursor:pointer;">
+                            
+                            <button class="send-comment" 
+                                    onclick="sendComment(this)" 
+                                    style="background:none; border:none; color:#8B1E29; font-size:1.2rem; cursor:pointer;">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
                         </div>
@@ -717,250 +726,175 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         </div>
     </div>
 
-    <script>
-        // Like bài viết (chỉ hiệu ứng giao diện)
-        document.querySelectorAll('.post-action-btn').forEach(btn => {
-            if (btn.querySelector('i.fa-thumbs-up')) {
-                btn.addEventListener('click', function() {
-                    this.classList.toggle('liked');
-                    const text = this.querySelector('span');
-                    if (this.classList.contains('liked')) {
-                        text.textContent = 'Đã thích';
-                    } else {
-                        text.textContent = 'Thích';
-                    }
-                });
+<script>
+// Đóng menu & modal khi click ra ngoài
+window.onclick = function(event) {
+    if (!event.target.closest('.post-menu-btn') && !event.target.closest('.post-options-menu')) {
+        document.querySelectorAll('.post-options-menu').forEach(menu => menu.classList.remove('show'));
+    }
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.style.display = 'none';
+    }
+};
+
+// Xử lý tất cả click bằng event delegation (chỉ 1 listener)
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button[data-action]');
+
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const postId = btn.dataset.postId;
+
+    if (action === 'toggle-like') {
+        if (btn.disabled) return;
+        btn.disabled = true;
+
+        fetch('interaction_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=toggle_like&post_id=${postId}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            if (data.success) {
+                btn.classList.toggle('liked', data.liked);
+                btn.querySelector('span').textContent = data.liked ? 'Đã thích' : 'Thích';
+                
+                const countEl = btn.closest('.post').querySelector('.like-count');
+                if (countEl) countEl.textContent = data.like_count;
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
             }
+        })
+        .catch(err => {
+            console.error('Lỗi toggle like:', err);
+            btn.disabled = false;
         });
+    }
+
+    // Xử lý toggle comment section (nếu nút comment cũng dùng data-action)
+    if (action === 'toggle-comments') {
+        const post = btn.closest('.post');
+        const section = post.querySelector('.comments-section');
+        const list = section.querySelector('.comments-list');
+        const postId = list.dataset.postId;
+
+        if (section.style.display === 'block') {
+            section.style.display = 'none';
+        } else {
+            section.style.display = 'block';
+            if (list.innerHTML.includes('Đang tải') || list.innerHTML.trim() === '') {
+                loadComments(postId, list);
+            }
+        }
+    }
+});
+
+// 3. Gửi bình luận
+function sendComment(btn) {
+    const form = btn.closest('.comment-form');
+    const input = form.querySelector('.comment-input');
+    const content = input.value.trim();
     
-        // Load bình luận khi click nút "Bình luận"
-        document.querySelectorAll('.btn-show-comments').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const commentsSection = this.closest('.post').querySelector('.comments-section');
-                const commentsList = commentsSection.querySelector('.comments-list');
-                const postId = commentsList.dataset.postId;
+    if (!content || btn.disabled) return;
 
-                if (commentsSection.style.display === 'block') {
-                    commentsSection.style.display = 'none';
-                } else {
-                    commentsSection.style.display = 'block';
-                    if (commentsList.innerHTML.includes('Đang tải')) {
-                        loadComments(postId, commentsList);
-                    }
-                }
-            });
-        });
+    btn.disabled = true;
+    const list = btn.closest('.post').querySelector('.comments-list');
+    const postId = list.dataset.postId;
 
-        // Gửi bình luận
-        document.querySelectorAll('.send-comment').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const input = this.closest('.comment-form').querySelector('.comment-input');
-                const content = input.value.trim();
-                if (!content) return;
+    fetch('interaction_handler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=add_comment&post_id=${postId}&content=${encodeURIComponent(content)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        if (data.success) {
+            input.value = '';
+            if (list.querySelector('.text-center')) list.innerHTML = '';
+            list.insertAdjacentHTML('afterbegin', renderComment(data.comment));
 
-                const postId = this.closest('.post').querySelector('.comments-list').dataset.postId;
-
-                fetch('interaction_handler.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=add_comment&post_id=${postId}&content=${encodeURIComponent(content)}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        input.value = '';
-                        const commentsList = document.querySelector(`.comments-list[data-post-id="${postId}"]`);
-                        commentsList.insertAdjacentHTML('afterbegin', renderComment(data.comment));
-                        updateCommentCount(postId, true);
-                    } else {
-                        alert(data.message);
-                    }
-                });
-            });
-        });
-
-        // Enter để gửi bình luận
-        document.querySelectorAll('.comment-input').forEach(input => {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    this.closest('.comment-form').querySelector('.send-comment').click();
-                }
-            });
-        });
-
-        // Like bài viết
-        document.querySelectorAll('.post-action-btn[data-post-id]').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!this.dataset.postId) return;
-
-                const postId = this.dataset.postId;
-                const isLiked = this.classList.contains('liked');
-
-                fetch('interaction_handler.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=toggle_like&post_id=${postId}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        this.classList.toggle('liked', data.liked);
-                        this.querySelector('span').textContent = data.liked ? 'Đã thích' : 'Thích';
-                        this.closest('.post').querySelector('.like-count').textContent = data.like_count;
-                    }
-                });
-            });
-        });
-
-        // Hàm load bình luận
-        function loadComments(postId, container) {
-            fetch(`interaction_handler.php?action=get_comments&post_id=${postId}`)
-            .then(r => r.json())
-            .then(data => {
-                container.innerHTML = '';
-                if (data.comments.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; color:#65676b; padding:20px;">Chưa có bình luận nào.</div>';
-                } else {
-                    data.comments.forEach(comment => {
-                        container.insertAdjacentHTML('beforeend', renderComment(comment));
-                    });
-                }
-            });
-        }
-
-        // Hàm render một bình luận
-        function renderComment(c) {
-            return `
-            <div class="comment-item" data-comment-id="${c.CommentID}">
-                <img src="${c.avatar_url}" class="comment-avatar">
-                <div>
-                    <div class="comment-bubble">
-                        <div class="comment-author">${c.FullName}</div>
-                        <div class="comment-content">${c.Content.replace(/\n/g, '<br>')}</div>
-                        <div class="comment-meta">${c.time_ago}</div>
-                        ${c.is_owner ? `
-                        <div class="comment-actions">
-                            <span onclick="editComment(this)">Sửa</span>
-                            <span onclick="deleteComment(this)">Xóa</span>
-                        </div>` : ''}
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        // Cập nhật số bình luận
-        function updateCommentCount(postId, increase = false) {
-            const post = document.querySelector(`.comments-list[data-post-id="${postId}"]`).closest('.post');
-            const countEl = post.querySelector('.comment-count');
-            let count = parseInt(countEl.textContent);
-            countEl.textContent = increase ? count + 1 : count - 1;
-        }
-
-        function handleFollowSidebar(userId) {
-            const btn = document.getElementById('follow-btn-sidebar-' + userId);
-            if (!btn) return;
-
-            // Hiệu ứng chờ
-            const originalText = btn.innerText;
-            btn.innerText = '...';
-            btn.disabled = true;
-
-            // Gửi yêu cầu AJAX
-            fetch('friends_action.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `target_id=${userId}&action=send_request`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Đổi trạng thái nút thành công
-                    btn.innerText = 'Đã gửi yêu cầu';
-                    btn.style.background = '#f0f2f5';
-                    btn.style.color = '#bcc0c4';
-                    btn.onclick = null; // Chặn bấm lại
-                } else {
-                    alert(data.message);
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                console.error('Lỗi:', err);
-                btn.innerText = originalText;
-                btn.disabled = false;
-            });
-        }
-    
-        // Hàm mở/đóng Menu Dropdown
-        function togglePostMenu(menuId) {
-            // Đóng các menu khác đang mở
-            document.querySelectorAll('.post-options-menu').forEach(menu => {
-                if (menu.id !== menuId) menu.classList.remove('show');
-            });
-            
-            // Toggle menu hiện tại
-            const menu = document.getElementById(menuId);
-            if (menu) {
-                menu.classList.toggle('show');
+            const countEl = btn.closest('.post').querySelector('.comment-count');
+            if (countEl) {
+                let cnt = parseInt(countEl.textContent) || 0;
+                countEl.textContent = cnt + 1;
             }
-            
-            // Ngăn sự kiện click lan ra ngoài (để window.onclick không đóng ngay lập tức)
-            event.stopPropagation();
+        } else {
+            alert(data.message || 'Không thể gửi bình luận');
         }
+    })
+    .catch(err => {
+        console.error('Lỗi gửi bình luận:', err);
+        btn.disabled = false;
+    });
+}
 
-        // Hàm mở Modal
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex';
-                // Đóng menu dropdown khi mở modal cho gọn
-                document.querySelectorAll('.post-options-menu').forEach(menu => menu.classList.remove('show'));
+// 4. Tải danh sách bình luận
+function loadComments(postId, container) {
+    fetch(`interaction_handler.php?action=get_comments&post_id=${postId}`)
+        .then(res => res.json())
+        .then(data => {
+            container.innerHTML = '';
+            if (data.comments?.length > 0) {
+                data.comments.forEach(c => container.insertAdjacentHTML('beforeend', renderComment(c)));
+            } else {
+                container.innerHTML = '<div class="text-center" style="color:#65676b; padding:10px;">Chưa có bình luận nào.</div>';
             }
-        }
+        })
+        .catch(err => console.error('Lỗi load comments:', err));
+}
 
-        // Hàm đóng Modal
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.style.display = 'none';
-        }
+// 5. Render HTML bình luận
+function renderComment(c) {
+    return `
+    <div class="comment-item" data-comment-id="${c.CommentID}">
+        <img src="${c.avatar_url}" class="comment-avatar">
+        <div class="comment-bubble">
+            <div class="comment-author">${c.FullName}</div>
+            <div class="comment-content">${c.Content.replace(/\n/g, '<br>')}</div>
+            <div class="comment-meta">${c.time_ago}</div>
+            ${c.is_owner ? `
+            <div class="comment-actions">
+                <span onclick="editComment(this)">Sửa</span>
+                <span onclick="deleteComment(this)">Xóa</span>
+            </div>` : ''}
+        </div>
+    </div>`;
+}
 
-        // Sự kiện click toàn cục để đóng menu/modal khi click ra ngoài
-        window.onclick = function(event) {
-            // Nếu click ra ngoài nút menu -> đóng tất cả menu
-            if (!event.target.closest('.post-menu-btn') && !event.target.closest('.post-options-menu')) {
-                document.querySelectorAll('.post-options-menu').forEach(menu => {
-                    menu.classList.remove('show');
-                });
-            }
+// Các hàm còn lại (nếu dùng)
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
 
-            // Nếu click vào vùng đen mờ (overlay) của modal -> đóng modal
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
-            }
-        }
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
 
-        function previewImages(input, previewContainerId) {
-            const container = document.getElementById(previewContainerId);
-            container.innerHTML = ""; // Xóa các preview cũ
-            
-            if (input.files) {
-                Array.from(input.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const img = document.createElement("img");
-                        img.src = e.target.result;
-                        img.style.width = "60px";
-                        img.style.height = "60px";
-                        img.style.objectFit = "cover";
-                        img.style.borderRadius = "4px";
-                        img.style.border = "1px solid #ddd";
-                        container.appendChild(img);
-                    }
-                    reader.readAsDataURL(file);
-                });
-            }
-        }
-    </script>
+function togglePostMenu(menuId) {
+    document.querySelectorAll('.post-options-menu.show').forEach(m => m.classList.remove('show'));
+    const menu = document.getElementById(menuId);
+    if (menu) menu.classList.toggle('show');
+    event?.stopPropagation();
+}
+
+function previewImages(input, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    [...input.files].forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;';
+            container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+</script>
 </body>
 </html>
