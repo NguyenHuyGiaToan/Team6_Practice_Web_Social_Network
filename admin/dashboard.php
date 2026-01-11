@@ -297,11 +297,11 @@ $admin_avatar = $_SESSION['user_avatar'] ?? __DIR__ . '/uploads/avatars/default_
                     $sql_post_ratio = "SELECT
                         COUNT(DISTINCT p.PostID) AS total_posts,
                         COUNT(DISTINCT CASE
-                            WHEN r.ReportID IS NULL OR r.Status = 'resolved'
+                            WHEN r.ReportID IS NULL OR r.Status = 'rejected'
                             THEN p.PostID
                         END) AS valid_posts,
                         COUNT(DISTINCT CASE
-                            WHEN r.Status = 'pending'
+                            WHEN r.Status = 'pending' OR r.Status = 'resolved'
                             THEN p.PostID
                         END) AS invalid_posts
                     FROM posts p
@@ -399,12 +399,9 @@ $admin_avatar = $_SESSION['user_avatar'] ?? __DIR__ . '/uploads/avatars/default_
                     ?>
                     <div class="top_post_list">
                         <?php foreach ($top_posts as $top_post) { 
-                            // Xử lý link dẫn tới bài viết cụ thể trên trang index 
-                            $post_link = "index.php#post-" . $top_post['PostID'];
-                            // Xử lý ảnh mặc định nếu bài viết không có ảnh
                             $image_src = !empty($top_post['ImageUrl']) ? "../uploads/posts/" . $top_post['ImageUrl'] : "../assets/images/no-image.png";
                         ?>
-                            <a href="<?= $post_link ?>" class="top_post_item_link" target="_blank">
+                            <a href="#" class="top_post_item_link post_detail" data-post-id="<?= $top_post['PostID'] ?>">
                                 <div class="top_post_container">
                                     <div class="top_post_img_wrapper">
                                         <img src="<?= $image_src ?>" alt="Post Image" class="top_post_img">
@@ -428,6 +425,37 @@ $admin_avatar = $_SESSION['user_avatar'] ?? __DIR__ . '/uploads/avatars/default_
 
         </main>
     </div>
+     <!-- Modal hiển thị chi tiết bài viết -->
+    <div id="postDetailModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;">
+        <div id="postDetailContent" style="background:#fff;max-width:650px;width:95vw;max-height:90vh;overflow:auto;border-radius:10px;box-shadow:0 2px 8px #0002;position:relative;padding:32px 24px 24px 24px;">
+            <button id="closePostDetail" style="position:absolute;top:12px;right:18px;font-size:1.5em;background:none;border:none;cursor:pointer;">&times;</button>
+            <div id="postDetailBody">Đang tải...</div>
+        </div>
+    </div>
+
+    <script>
+    document.querySelectorAll('.post_detail').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var postId = this.getAttribute('data-post-id');
+            var modal = document.getElementById('postDetailModal');
+            var body = document.getElementById('postDetailBody');
+            modal.style.display = 'flex';
+            body.innerHTML = 'Đang tải...';
+            fetch('post_detail.php?id=' + postId + '&ajax=1')
+                .then(res => res.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = 'Lỗi tải dữ liệu.'; });
+        });
+    });
+    document.getElementById('closePostDetail').onclick = function() {
+        document.getElementById('postDetailModal').style.display = 'none';
+    };
+    window.onclick = function(event) {
+        var modal = document.getElementById('postDetailModal');
+        if (event.target === modal) modal.style.display = 'none';
+    };
+    </script>
 
 </body>
 

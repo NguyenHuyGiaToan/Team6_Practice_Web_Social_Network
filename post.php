@@ -1,7 +1,7 @@
 <?php
 // post.php
-require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/includes/database.php';
+require_once __DIR__ . '../includes/config.php';
+require_once __DIR__ . '../includes/database.php';
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_post'])) {
                 $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
                 if (in_array($ext, $allowed)) {
                     $image_name = uniqid() . '.' . $ext;
-                    $upload_path = BASE_URL . "/uploads/posts/" . $image_name;
+                    $upload_path = "C:/wamp64/www/web-social-network/uploads/posts/" . $image_name;
                     if (!is_dir(dirname($upload_path))) mkdir(dirname($upload_path), 0777, true);
                     if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_path)) {
                         $img_stmt = mysqli_prepare($conn, "INSERT INTO Post_Images (FK_PostID, ImageUrl) VALUES (?, ?)");
@@ -72,7 +72,7 @@ mysqli_stmt_execute($stmt);
 $current_user = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
 
 $avatar_url = !empty($current_user['Avatar']) 
-    ? BASE_URL . '/uploads/avatars/' . htmlspecialchars($current_user['Avatar']) 
+    ? BASE_URL . 'uploads/avatars/' . htmlspecialchars($current_user['Avatar']) 
     : 'https://ui-avatars.com/api/?name=' . urlencode($current_user['FullName']) . '&background=8B1E29&color=fff&size=200';
 ?>
 
