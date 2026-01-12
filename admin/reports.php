@@ -153,7 +153,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                             Đã xử lý
                         </option>
                         <option value="rejected" <?= ($_GET['status'] ?? '') === 'rejected' ? 'selected' : '' ?>>
-                            Bỏ qua
+                            Từ chối
                         </option>
                     </select>
 
@@ -187,7 +187,8 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                     </tr>
                     <?php
                     $sql_reports = "SELECT 
-                                        r.ReportID, 
+                                        r.ReportID,
+                                        r.FK_ReporterID, 
                                         u.Avatar,
                                         u.FullName, u.UserID,
                                         r.FK_PostID, 
@@ -204,7 +205,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                     FROM Reports r 
                                     LEFT JOIN Posts p ON r.FK_PostID = p.PostID
                                     LEFT JOIN Comments c ON r.FK_CommentID = c.CommentID
-                                    LEFT JOIN Users u ON p.FK_UserID = u.UserID";
+                                    LEFT JOIN Users u ON r.FK_ReporterID = u.UserID";
                     if (!empty($where)) {
                         $sql_reports .= " WHERE " . implode(" AND ", $where);
                     }
@@ -244,16 +245,13 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                                     } ?>"><?= $report['Status'] ?></span></td>
 
                             <td class="actions">
-                                <a href="post.php?FK_PostID=<?= $report['FK_PostID'] ?>"><i class="fa-solid fa-eye"></i></a>
-                                <a href="reports_del.php?ReportID=<?= $report['ReportID'] ?>" onclick="return confirm('Bạn có chắc chắn muốn xóa báo cáo này?');"><i class="fa-solid fa-trash"></i></a>
+                                <a class="post_detail" href="#" data-post-id="<?= $report['FK_PostID'] ?>"><i class="fa-solid fa-eye"></i></a>
+                                <a href="reports_del.php?ReportID=<?= $report['ReportID'] ?>" onclick="return confirm('Bạn có chắc chắn muốn từ chối báo cáo này?');"><i class="fa-solid fa-trash"></i></a>
                                 <a href="reports_res.php?ReportID=<?= $report['ReportID'] ?>"><i class="fa-solid fa-check"></i></a>
                             </td>
                         </tr>
                     <?php }
                     ?>
-
-
-
                 </table>
 
                 <div class="pagination">
@@ -261,6 +259,38 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
             </section>
 
     </div>
+
+    <!-- Modal hiển thị chi tiết bài viết -->
+    <div id="postDetailModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;">
+        <div id="postDetailContent" style="background:#fff;max-width:650px;width:95vw;max-height:90vh;overflow:auto;border-radius:10px;box-shadow:0 2px 8px #0002;position:relative;padding:32px 24px 24px 24px;">
+            <button id="closePostDetail" style="position:absolute;top:12px;right:18px;font-size:1.5em;background:none;border:none;cursor:pointer;">&times;</button>
+            <div id="postDetailBody">Đang tải...</div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.post_detail').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var postId = this.getAttribute('data-post-id');
+                var modal = document.getElementById('postDetailModal');
+                var body = document.getElementById('postDetailBody');
+                modal.style.display = 'flex';
+                body.innerHTML = 'Đang tải...';
+                fetch('post_detail.php?id=' + postId + '&ajax=1')
+                    .then(res => res.text())
+                    .then(html => { body.innerHTML = html; })
+                    .catch(() => { body.innerHTML = 'Lỗi tải dữ liệu.'; });
+            });
+        });
+        document.getElementById('closePostDetail').onclick = function() {
+            document.getElementById('postDetailModal').style.display = 'none';
+        };
+        window.onclick = function(event) {
+            var modal = document.getElementById('postDetailModal');
+            if (event.target === modal) modal.style.display = 'none';
+        };
+    </script>
 </body>
 
 </html>

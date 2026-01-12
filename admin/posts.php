@@ -344,7 +344,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                                     </td>
                                     <td>
                                         <div class="action-btns">
-                                            <a href="../post.php?id=<?= $post['PostID'] ?>" class="btn view">
+                                            <a href="#" class="btn view post_detail" data-post-id="<?= $post['PostID'] ?>">
                                                 <i class="fas fa-eye"></i> Xem chi tiết
                                             </a>
                                             <a href="?action=delete&id=<?= $post['PostID'] ?>" 
@@ -439,31 +439,60 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
                 </div>
             </div>
         </div>
+    <!-- Modal hiển thị chi tiết bài viết -->
+    <div id="postDetailModal" style="display:none;position:fixed;z-index:9999;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;">
+        <div id="postDetailContent" style="background:#fff;max-width:650px;width:95vw;max-height:90vh;overflow:auto;border-radius:10px;box-shadow:0 2px 8px #0002;position:relative;padding:32px 24px 24px 24px;">
+            <button id="closePostDetail" style="position:absolute;top:12px;right:18px;font-size:1.5em;background:none;border:none;cursor:pointer;">&times;</button>
+            <div id="postDetailBody">Đang tải...</div>
+        </div>
+    </div>
+
+    <script>
+    document.querySelectorAll('.post_detail').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var postId = this.getAttribute('data-post-id');
+            var modal = document.getElementById('postDetailModal');
+            var body = document.getElementById('postDetailBody');
+            modal.style.display = 'flex';
+            body.innerHTML = 'Đang tải...';
+            fetch('post_detail.php?id=' + postId + '&ajax=1')
+                .then(res => res.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = 'Lỗi tải dữ liệu.'; });
+        });
+    });
+    document.getElementById('closePostDetail').onclick = function() {
+        document.getElementById('postDetailModal').style.display = 'none';
+    };
+    window.onclick = function(event) {
+        var modal = document.getElementById('postDetailModal');
+        if (event.target === modal) modal.style.display = 'none';
+    };
+
+    function switchTab(tab) {
+        const postsTab = document.querySelector('.post-tab:first-child');
+        const commentsTab = document.querySelector('.post-tab:last-child');
+        const postsSection = document.getElementById('postsSection');
+        const commentsSection = document.getElementById('commentsSection');
+        
+        if (tab === 'posts') {
+            postsTab.classList.add('active');
+            commentsTab.classList.remove('active');
+            postsSection.style.display = 'block';
+            commentsSection.style.display = 'none';
+        } else {
+            postsTab.classList.remove('active');
+            commentsTab.classList.add('active');
+            postsSection.style.display = 'none';
+            commentsSection.style.display = 'block';
+        }
+    }
+
+    // Enter để tìm kiếm
+    document.querySelector('input[name="search"]').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') this.closest('form').submit();
+    });
+    </script>
 </body>
 </html>
-
-<script>
-function switchTab(tab) {
-    const postsTab = document.querySelector('.post-tab:first-child');
-    const commentsTab = document.querySelector('.post-tab:last-child');
-    const postsSection = document.getElementById('postsSection');
-    const commentsSection = document.getElementById('commentsSection');
-    
-    if (tab === 'posts') {
-        postsTab.classList.add('active');
-        commentsTab.classList.remove('active');
-        postsSection.style.display = 'block';
-        commentsSection.style.display = 'none';
-    } else {
-        postsTab.classList.remove('active');
-        commentsTab.classList.add('active');
-        postsSection.style.display = 'none';
-        commentsSection.style.display = 'block';
-    }
-}
-
-// Enter để tìm kiếm
-document.querySelector('input[name="search"]').addEventListener('keyup', function(e) {
-    if (e.key === 'Enter') this.closest('form').submit();
-});
-</script>

@@ -1,8 +1,8 @@
 <?php
-require_once __DIR__ . '/includes/config.php';
-require_once __DIR__ . '/includes/database.php';
-require_once __DIR__ . '/includes/functions.php';
-require_once __DIR__ . '/includes/header.php'; 
+require_once __DIR__ . '../includes/config.php';
+require_once __DIR__ . '../includes/database.php';
+require_once __DIR__ . '../includes/functions.php';
+require_once __DIR__ . '../includes/header.php'; 
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user_id'])) {
@@ -51,7 +51,7 @@ $following_list = implode(',', $following_ids);
 // Logic: (Là bài active của người mình follow) HOẶC (Là bài của chính mình dù trạng thái gì, trừ đã xóa)
 $posts_query = "
     SELECT 
-        p.PostID, p.FK_UserID, p.Content, p.LikeCount, p.CommentCount, p.CreatedAt, p.Status,
+        p.PostID, p.FK_UserID as UserID, p.Content, p.LikeCount, p.CommentCount, p.CreatedAt, p.Status,
         u.FullName, u.Avatar, 
         (l.FK_UserID IS NOT NULL) AS user_liked
     FROM POSTS p
@@ -93,7 +93,7 @@ while ($post = mysqli_fetch_assoc($posts_result)) {
 // 3. Lấy hình ảnh cho từng bài viết (nếu có)
 foreach ($posts as &$post) {
     $img_stmt = mysqli_prepare($conn, "
-        SELECT ImageUrl 
+        SELECT ImageUrl, ImageID
         FROM POST_IMAGES 
         WHERE FK_PostID = ? 
         ORDER BY ImageID 
@@ -104,8 +104,10 @@ foreach ($posts as &$post) {
     $img_result = mysqli_stmt_get_result($img_stmt);
 
     $post['images'] = [];
+    $post['image_ids'] = []; // Để dùng cho việc xóa ảnh khi edit
     while ($img = mysqli_fetch_assoc($img_result)) {
-        $post['images'][] = 'uploads/posts/' . htmlspecialchars($img['ImageUrl']);
+        $post['images'][] = BASE_URL . 'uploads/posts/' . htmlspecialchars($img['ImageUrl']);
+        $post['image_ids'][] = $img['ImageID'];
     }
 }
 unset($post); 
@@ -333,14 +335,71 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
             background: #70171f;
         }
 
-        /* Responsive */
-        @media (max-width: 1100px) {
-            .main-layout { grid-template-columns:280px 1fr; }
-            .right-sidebar { display:none; }
+        /* --- CSS CHO MENU 3 CHẤM VÀ MODAL --- */
+        .post-header-right { position: relative; margin-left: auto; }
+
+        .post-menu-btn {
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; cursor: pointer; color: #65676b; transition: 0.2s;
         }
-        @media (max-width: 768px) {
-            .main-layout { grid-template-columns:1fr; }
-            .left-sidebar { display:none; }
+        .post-menu-btn:hover { background-color: #f0f2f5; }
+
+        /* Menu Dropdown */
+        .post-options-menu {
+            display: none; position: absolute;
+            top: 35px; right: 0; width: 280px;
+            background: white; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10; padding: 8px; border: 1px solid #e4e6eb;
+        }
+        .post-options-menu.show { display: block; }
+
+        .menu-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 6px;
+            color: #050505; text-decoration: none; font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; transition: 0.2s;
+        }
+        .menu-item:hover { background-color: #f2f2f2; }
+        .menu-item i { width: 20px; text-align: center; }
+
+        /* Modal Overlay (Chung) */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background: white; width: 90%; max-width: 500px;
+            border-radius: 8px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .modal-header {
+            padding: 15px; border-bottom: 1px solid #e4e6eb;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.1rem; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+
+        .modal-body { padding: 15px; }
+
+        /* Form Elements inside Modal */
+        .edit-textarea {
+            width: 100%; min-height: 100px; padding: 10px;
+            border: 1px solid #ddd; border-radius: 6px; resize: none; font-family: inherit;
+        }
+        .report-list { list-style: none; padding: 0; margin: 0; }
+        .report-item { padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .report-item:hover { background: #f0f2f5; }
+        .btn-submit-modal {
+            width: 100%; padding: 10px; margin-top: 15px;
+            background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;
         }
         .comments-section {
         border-top: 1px solid #e4e6eb;
@@ -410,6 +469,14 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
             outline: none;
             margin-top: 8px;
         }
+        .comment-stats-trigger {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .comment-stats-trigger:hover {
+            text-decoration: underline;
+            color: #1c1e21; /* Hoặc màu đen đậm hơn */
+        }
     </style>
 </head>
 <body>
@@ -464,7 +531,7 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                 </div>
 
                 <!-- Danh sách bài viết -->
-                <?php foreach($posts as $post): ?>
+               <?php foreach($posts as $post): ?>
                 <div class="post">
                     <div class="post-header">
                         <img src="<?php echo $post['avatar_url']; ?>" class="post-avatar" alt="Avatar">
@@ -472,14 +539,37 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                             <h4><?php echo htmlspecialchars($post['FullName']); ?></h4>
                             <div class="time"><?php echo $post['time_ago']; ?> <i class="fa-solid fa-earth-americas" style="font-size:12px;"></i></div>
                         </div>
-                        <i class="fa-solid fa-ellipsis" style="margin-left:auto; color:#65676b; cursor:pointer;"></i>
-                    </div>
+                        
+                        <div class="post-header-right">
+                            <div class="post-menu-btn" onclick="togglePostMenu('menu-<?php echo $post['PostID']; ?>')">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </div>
+
+                            <div id="menu-<?php echo $post['PostID']; ?>" class="post-options-menu">
+                                <a href="saved_post_action.php?id=<?php echo $post['PostID']; ?>" class="menu-item">
+                                    <i class="fa-solid fa-bookmark"></i> Lưu bài viết
+                                </a>
+
+                                <?php if ($post['UserID'] == $_SESSION['user_id']): ?>
+                                    <div class="menu-item" onclick="openModal('edit-modal-<?php echo $post['PostID']; ?>')">
+                                        <i class="fa-solid fa-pen"></i> Chỉnh sửa bài viết
+                                    </div>
+                                    <a href="deleted_post_action.php?id=<?php echo $post['PostID']; ?>" class="menu-item" onclick="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')">
+                                        <i class="fa-solid fa-trash"></i> Xóa bài viết
+                                    </a>
+                                <?php else: ?>
+                                    <div class="menu-item" onclick="openModal('report-modal-<?php echo $post['PostID']; ?>')">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> Báo cáo bài viết
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        </div>
                     
                     <div class="post-content">
                         <?php echo nl2br(htmlspecialchars($post['Content'])); ?>
                     </div>
 
-                    <!-- Hiển thị hình ảnh nếu có -->
                     <?php if (!empty($post['images'])): ?>
                     <div class="post-images" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:4px; margin:12px -16px;">
                         <?php foreach($post['images'] as $img): ?>
@@ -497,35 +587,108 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
                     </div>
 
                     <div class="post-actions-row">
-                        <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" 
+                       <button class="post-action-btn <?php echo $post['user_liked'] ? 'liked' : ''; ?>" 
+                                data-action="toggle-like" 
                                 data-post-id="<?php echo $post['PostID']; ?>">
                             <i class="fa-regular fa-thumbs-up"></i> 
                             <span><?php echo $post['user_liked'] ? 'Đã thích' : 'Thích'; ?></span>
                         </button>
-                        <button class="post-action-btn btn-show-comments">
+
+                        <button class="post-action-btn btn-show-comments" 
+                                data-action="toggle-comments" 
+                                data-post-id="<?php echo $post['PostID']; ?>">
                             <i class="fa-regular fa-comment"></i> Bình luận
                         </button>
                     </div>
 
-                    <!-- Khu vực bình luận -->
                     <div class="comments-section" style="margin-top: 16px; display: none;">
-                        <!-- Danh sách bình luận -->
                         <div class="comments-list" data-post-id="<?php echo $post['PostID']; ?>">
-                            <!-- Bình luận sẽ được load bằng JS -->
                             <div class="text-center" style="color:#65676b; padding:20px;">Đang tải bình luận...</div>
                         </div>
 
-                        <!-- Form thêm bình luận -->
                         <div class="comment-form" style="display:flex; gap:8px; margin-top:12px;">
                             <img src="<?php echo getAvatarUrl(); ?>" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
                             <input type="text" class="comment-input" placeholder="Viết bình luận..." style="flex:1; padding:10px; border-radius:20px; border:1px solid #ccd0d5; outline:none;">
-                            <button class="send-comment" style="background:none; border:none; color:#8B1E29; font-size:1.2rem; cursor:pointer;">
+                            
+                            <button class="send-comment" 
+                                    onclick="sendComment(this)" 
+                                    style="background:none; border:none; color:#8B1E29; font-size:1.2rem; cursor:pointer;">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
                         </div>
                     </div>
-                </div>
-                <?php endforeach; ?>
+
+                    <?php if ($post['UserID'] == $_SESSION['user_id']): ?>
+                        <div id="edit-modal-<?php echo $post['PostID']; ?>" class="modal-overlay">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3>Chỉnh sửa bài viết</h3>
+                                    <button class="close-modal" onclick="closeModal('edit-modal-<?php echo $post['PostID']; ?>')">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="edit_post_action.php" method="POST" enctype="multipart/form-data">
+                                        <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
+                                        
+                                        <textarea name="content" class="edit-textarea" placeholder="Bạn đang nghĩ gì?"><?php echo htmlspecialchars($post['Content']); ?></textarea>
+
+                                        <?php if (!empty($post['images'])): ?>
+                                            <div class="edit-current-images" style="margin-top: 15px;">
+                                                <p style="font-size: 0.9rem; font-weight: 600; margin-bottom: 8px;">Ảnh hiện tại (Chọn để xóa):</p>
+                                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                    <?php foreach ($post['images'] as $index => $img_url): 
+                                                        // Giả sử mảng $post['image_ids'] chứa ID tương ứng của từng ảnh từ DB
+                                                        $img_id = $post['image_ids'][$index] ?? 0; 
+                                                    ?>
+                                                        <div class="img-thumb-container" style="position: relative; width: 80px; height: 80px;">
+                                                            <img src="<?php echo $img_url; ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                                                            <label style="position: absolute; top: -5px; right: -5px; background: rgba(255,255,255,0.9); border-radius: 50%; padding: 2px; cursor: pointer; border: 1px solid #ddd;">
+                                                                <input type="checkbox" name="delete_images[]" value="<?php echo $img_id; ?>" title="Xóa ảnh này">
+                                                            </label>
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <div style="margin-top: 20px; padding: 10px; border: 1px dashed #ccd0d5; border-radius: 8px;">
+                                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #65676b;">
+                                                <i class="fa-solid fa-images" style="color: #45bd62; font-size: 1.2rem;"></i>
+                                                <span style="font-weight: 600;">Thêm ảnh mới</span>
+                                                <input type="file" name="new_images[]" multiple accept="image/*" style="display: none;" onchange="previewImages(this, 'preview-<?php echo $post['PostID']; ?>')">
+                                            </label>
+                                            <div id="preview-<?php echo $post['PostID']; ?>" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;"></div>
+                                        </div>
+
+                                        <button type="submit" class="btn-submit-modal">Lưu thay đổi</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <div id="report-modal-<?php echo $post['PostID']; ?>" class="modal-overlay">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Báo cáo bài viết</h3>
+                                <button class="close-modal" onclick="closeModal('report-modal-<?php echo $post['PostID']; ?>')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Hãy chọn lý do báo cáo:</p>
+                                <form action="report_post_action.php" method="POST">
+                                    <input type="hidden" name="post_id" value="<?php echo $post['PostID']; ?>">
+                                    <ul class="report-list">
+                                        <li class="report-item"><input type="radio" name="reason" value="spam" id="r1-<?php echo $post['PostID']; ?>"><label for="r1-<?php echo $post['PostID']; ?>">Spam</label></li>
+                                        <li class="report-item"><input type="radio" name="reason" value="violence" id="r2-<?php echo $post['PostID']; ?>"><label for="r2-<?php echo $post['PostID']; ?>">Bạo lực</label></li>
+                                        <li class="report-item"><input type="radio" name="reason" value="harassment" id="r3-<?php echo $post['PostID']; ?>"><label for="r3-<?php echo $post['PostID']; ?>">Quấy rối</label></li>
+                                        <li class="report-item"><input type="radio" name="reason" value="fake_news" id="r4-<?php echo $post['PostID']; ?>"><label for="r4-<?php echo $post['PostID']; ?>">Tin giả</label></li>
+                                    </ul>
+                                    <button type="submit" class="btn-submit-modal" style="background:#e4e6eb; color:black;">Gửi báo cáo</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <?php endforeach; ?>
 
 <?php if (empty($posts)): ?>
 <div class="post" style="text-align:center; color:#65676b; padding:40px;">
@@ -571,180 +734,211 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
         </div>
     </div>
 
-    <script>
-        // Like bài viết (chỉ hiệu ứng giao diện)
-        document.querySelectorAll('.post-action-btn').forEach(btn => {
-            if (btn.querySelector('i.fa-thumbs-up')) {
-                btn.addEventListener('click', function() {
-                    this.classList.toggle('liked');
-                    const text = this.querySelector('span');
-                    if (this.classList.contains('liked')) {
-                        text.textContent = 'Đã thích';
-                    } else {
-                        text.textContent = 'Thích';
-                    }
-                });
+<script>
+// Đóng menu & modal khi click ra ngoài
+window.onclick = function(event) {
+    if (!event.target.closest('.post-menu-btn') && !event.target.closest('.post-options-menu')) {
+        document.querySelectorAll('.post-options-menu').forEach(menu => menu.classList.remove('show'));
+    }
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.style.display = 'none';
+    }
+};
+
+// Xử lý tất cả click bằng event delegation (chỉ 1 listener)
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button[data-action]');
+
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const postId = btn.dataset.postId;
+
+    if (action === 'toggle-like') {
+        if (btn.disabled) return;
+        btn.disabled = true;
+
+        fetch('interaction_handler.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=toggle_like&post_id=${postId}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            if (data.success) {
+                btn.classList.toggle('liked', data.liked);
+                btn.querySelector('span').textContent = data.liked ? 'Đã thích' : 'Thích';
+                
+                const countEl = btn.closest('.post').querySelector('.like-count');
+                if (countEl) countEl.textContent = data.like_count;
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
             }
+        })
+        .catch(err => {
+            console.error('Lỗi toggle like:', err);
+            btn.disabled = false;
         });
+    }
+
+    // Xử lý toggle comment section (nếu nút comment cũng dùng data-action)
+    if (action === 'toggle-comments') {
+        const post = btn.closest('.post');
+        const section = post.querySelector('.comments-section');
+        const list = section.querySelector('.comments-list');
+        const postId = list.dataset.postId;
+
+        if (section.style.display === 'block') {
+            section.style.display = 'none';
+        } else {
+            section.style.display = 'block';
+            if (list.innerHTML.includes('Đang tải') || list.innerHTML.trim() === '') {
+                loadComments(postId, list);
+            }
+        }
+    }
+});
+
+// 3. Gửi bình luận
+function sendComment(btn) {
+    const form = btn.closest('.comment-form');
+    const input = form.querySelector('.comment-input');
+    const content = input.value.trim();
     
-        // Load bình luận khi click nút "Bình luận"
-        document.querySelectorAll('.btn-show-comments').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const commentsSection = this.closest('.post').querySelector('.comments-section');
-                const commentsList = commentsSection.querySelector('.comments-list');
-                const postId = commentsList.dataset.postId;
+    if (!content || btn.disabled) return;
 
-                if (commentsSection.style.display === 'block') {
-                    commentsSection.style.display = 'none';
-                } else {
-                    commentsSection.style.display = 'block';
-                    if (commentsList.innerHTML.includes('Đang tải')) {
-                        loadComments(postId, commentsList);
-                    }
-                }
-            });
-        });
+    btn.disabled = true;
+    const list = btn.closest('.post').querySelector('.comments-list');
+    const postId = list.dataset.postId;
 
-        // Gửi bình luận
-        document.querySelectorAll('.send-comment').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const input = this.closest('.comment-form').querySelector('.comment-input');
-                const content = input.value.trim();
-                if (!content) return;
+    fetch('interaction_handler.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=add_comment&post_id=${postId}&content=${encodeURIComponent(content)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        if (data.success) {
+            input.value = '';
+            if (list.querySelector('.text-center')) list.innerHTML = '';
+            list.insertAdjacentHTML('afterbegin', renderComment(data.comment));
 
-                const postId = this.closest('.post').querySelector('.comments-list').dataset.postId;
-
-                fetch('interaction_handler.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=add_comment&post_id=${postId}&content=${encodeURIComponent(content)}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        input.value = '';
-                        const commentsList = document.querySelector(`.comments-list[data-post-id="${postId}"]`);
-                        commentsList.insertAdjacentHTML('afterbegin', renderComment(data.comment));
-                        updateCommentCount(postId, true);
-                    } else {
-                        alert(data.message);
-                    }
-                });
-            });
-        });
-
-        // Enter để gửi bình luận
-        document.querySelectorAll('.comment-input').forEach(input => {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    this.closest('.comment-form').querySelector('.send-comment').click();
-                }
-            });
-        });
-
-        // Like bài viết
-        document.querySelectorAll('.post-action-btn[data-post-id]').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (!this.dataset.postId) return;
-
-                const postId = this.dataset.postId;
-                const isLiked = this.classList.contains('liked');
-
-                fetch('interaction_handler.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=toggle_like&post_id=${postId}`
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        this.classList.toggle('liked', data.liked);
-                        this.querySelector('span').textContent = data.liked ? 'Đã thích' : 'Thích';
-                        this.closest('.post').querySelector('.like-count').textContent = data.like_count;
-                    }
-                });
-            });
-        });
-
-        // Hàm load bình luận
-        function loadComments(postId, container) {
-            fetch(`interaction_handler.php?action=get_comments&post_id=${postId}`)
-            .then(r => r.json())
-            .then(data => {
-                container.innerHTML = '';
-                if (data.comments.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; color:#65676b; padding:20px;">Chưa có bình luận nào.</div>';
-                } else {
-                    data.comments.forEach(comment => {
-                        container.insertAdjacentHTML('beforeend', renderComment(comment));
-                    });
-                }
-            });
+            const countEl = btn.closest('.post').querySelector('.comment-count');
+            if (countEl) {
+                let cnt = parseInt(countEl.textContent) || 0;
+                countEl.textContent = cnt + 1;
+            }
+        } else {
+            alert(data.message || 'Không thể gửi bình luận');
         }
+    })
+    .catch(err => {
+        console.error('Lỗi gửi bình luận:', err);
+        btn.disabled = false;
+    });
+}
 
-        // Hàm render một bình luận
-        function renderComment(c) {
-            return `
-            <div class="comment-item" data-comment-id="${c.CommentID}">
-                <img src="${c.avatar_url}" class="comment-avatar">
-                <div>
-                    <div class="comment-bubble">
-                        <div class="comment-author">${c.FullName}</div>
-                        <div class="comment-content">${c.Content.replace(/\n/g, '<br>')}</div>
-                        <div class="comment-meta">${c.time_ago}</div>
-                        ${c.is_owner ? `
-                        <div class="comment-actions">
-                            <span onclick="editComment(this)">Sửa</span>
-                            <span onclick="deleteComment(this)">Xóa</span>
-                        </div>` : ''}
-                    </div>
-                </div>
-            </div>`;
+// 4. Tải danh sách bình luận
+function loadComments(postId, container) {
+    fetch(`interaction_handler.php?action=get_comments&post_id=${postId}`)
+        .then(res => res.json())
+        .then(data => {
+            container.innerHTML = '';
+            if (data.comments?.length > 0) {
+                data.comments.forEach(c => container.insertAdjacentHTML('beforeend', renderComment(c)));
+            } else {
+                container.innerHTML = '<div class="text-center" style="color:#65676b; padding:10px;">Chưa có bình luận nào.</div>';
+            }
+        })
+        .catch(err => console.error('Lỗi load comments:', err));
+}
+
+// 5. Render HTML bình luận
+function renderComment(c) {
+    return `
+    <div class="comment-item" data-comment-id="${c.CommentID}">
+        <img src="${c.avatar_url}" class="comment-avatar">
+        <div class="comment-bubble">
+            <div class="comment-author">${c.FullName}</div>
+            <div class="comment-content">${c.Content.replace(/\n/g, '<br>')}</div>
+            <div class="comment-meta">${c.time_ago}</div>
+            ${c.is_owner ? `
+            <div class="comment-actions">
+                <span onclick="editComment(this)">Sửa</span>
+                <span onclick="deleteComment(this)">Xóa</span>
+            </div>` : ''}
+        </div>
+    </div>`;
+}
+
+function handleFollowSidebar(userId) {
+    const btn = document.getElementById('follow-btn-sidebar-' + userId);
+    if (!btn || btn.disabled) return;
+
+    // 1. Khóa nút ngay lập tức để chống click đúp
+    btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = '...';
+
+    // 2. Gửi yêu cầu đến friends_action.php
+    fetch('friends_action.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `target_id=${userId}&action=send_request`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Thay đổi giao diện nút thành công
+            btn.innerText = 'Đã gửi yêu cầu';
+            btn.style.background = '#e4e6eb';
+            btn.style.color = '#65676b';
+            btn.onclick = null; // Chặn bấm lại hoàn toàn
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+            btn.innerText = originalText;
         }
+    })
+    .catch(err => {
+        console.error('Lỗi:', err);
+        btn.disabled = false;
+        btn.innerText = originalText;
+    });
+}
 
-        // Cập nhật số bình luận
-        function updateCommentCount(postId, increase = false) {
-            const post = document.querySelector(`.comments-list[data-post-id="${postId}"]`).closest('.post');
-            const countEl = post.querySelector('.comment-count');
-            let count = parseInt(countEl.textContent);
-            countEl.textContent = increase ? count + 1 : count - 1;
-        }
+// Các hàm còn lại (nếu dùng)
+function openModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
 
-        function handleFollowSidebar(userId) {
-            const btn = document.getElementById('follow-btn-sidebar-' + userId);
-            if (!btn) return;
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
 
-            // Hiệu ứng chờ
-            const originalText = btn.innerText;
-            btn.innerText = '...';
-            btn.disabled = true;
+function togglePostMenu(menuId) {
+    document.querySelectorAll('.post-options-menu.show').forEach(m => m.classList.remove('show'));
+    const menu = document.getElementById(menuId);
+    if (menu) menu.classList.toggle('show');
+    event?.stopPropagation();
+}
 
-            // Gửi yêu cầu AJAX
-            fetch('friends_action.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `target_id=${userId}&action=send_request`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Đổi trạng thái nút thành công
-                    btn.innerText = 'Đã gửi yêu cầu';
-                    btn.style.background = '#f0f2f5';
-                    btn.style.color = '#bcc0c4';
-                    btn.onclick = null; // Chặn bấm lại
-                } else {
-                    alert(data.message);
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                console.error('Lỗi:', err);
-                btn.innerText = originalText;
-                btn.disabled = false;
-            });
-        }
-    </script>
+function previewImages(input, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    [...input.files].forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'width:60px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #ddd;';
+            container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+</script>
 </body>
 </html>

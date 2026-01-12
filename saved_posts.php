@@ -2,6 +2,32 @@
 // saved-posts.php
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/database.php';
+
+// --- PHẦN TÍCH HỢP XỬ LÝ AJAX (Bỏ lưu) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'unsave') {
+    header('Content-Type: application/json');
+    
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'message' => 'Hết phiên đăng nhập']);
+        exit();
+    }
+
+    $u_id = $_SESSION['user_id'];
+    $p_id = intval($_POST['post_id'] ?? 0);
+
+    // Xóa khỏi Database
+    $stmt_del = mysqli_prepare($conn, "DELETE FROM Saved_Posts WHERE FK_UserID = ? AND FK_PostID = ?");
+    mysqli_stmt_bind_param($stmt_del, "ii", $u_id, $p_id);
+    
+    if (mysqli_stmt_execute($stmt_del)) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Lỗi truy vấn']);
+    }
+    exit(); // Dừng lại ở đây, không chạy xuống phần giao diện bên dưới
+}
+// --- HẾT PHẦN XỬ LÝ AJAX ---
+
 require_once __DIR__ . '/includes/header.php'; 
 
 if (!isset($_SESSION['user_id'])) {
@@ -103,13 +129,16 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
         }
 
         /* Container chính cho bài viết */
-        .post {
+       .post {
             background: #fff;
             border: 1px solid #dddfe2;
             border-radius: 8px;
             width: 600px;
-            padding: 12px 0 0 0; /* Bỏ padding ngang để ảnh tràn viền */
+            padding: 12px 0 0 0;
             margin-bottom: 16px;
+            /* Hiệu ứng mượt mà khi ẩn bài viết */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
         }
 
         /* Header bài viết */
@@ -342,34 +371,45 @@ $saved_posts = mysqli_fetch_all(mysqli_stmt_get_result($stmt), MYSQLI_ASSOC);
         
         // EF-03: Unsave post
         function unsavePost(postId) {
-            if(confirm('Bỏ lưu bài viết này?')) {
-                fetch('ajax/save.php', {
+            if(confirm('Bạn có chắc chắn muốn bỏ lưu bài viết này?')) {
+                const postElement = document.getElementById('post-' + postId);
+                
+                // Gửi yêu cầu đến chính trang hiện tại
+                fetch('saved_posts.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'post_id=' + postId + '&action=unsave'
+                    body: `post_id=${postId}&action=unsave`
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if(data.success && !data.saved) {
-                        const postElement = document.getElementById('post-' + postId);
-                        postElement.style.opacity = '0.5';
+                    if(data.success) {
+                        // Hiệu ứng giao diện: Thu nhỏ và mờ dần
+                        postElement.style.opacity = '0';
+                        postElement.style.transform = 'scale(0.8)';
+                        postElement.style.maxHeight = '0';
+                        postElement.style.marginBottom = '0';
+                        postElement.style.paddingTop = '0';
+
                         setTimeout(() => {
                             postElement.remove();
                             
-                            // Cập nhật số lượng
-                            const countElement = document.querySelector('.news-feed p');
+                            // Cập nhật số lượng bài viết trên tiêu đề
+                            const countElement = document.querySelector('.feed-header p');
                             if(countElement) {
-                                const current = parseInt(countElement.textContent);
-                                countElement.textContent = (current - 1) + ' bài viết';
+                                let current = parseInt(countElement.textContent);
+                                countElement.textContent = (current - 1) + ' Bài viết';
                             }
                             
-                            // Hiển thị empty state nếu không còn bài
-                            if(document.querySelectorAll('.post').length === 0) {
+                            // Nếu không còn bài nào, reload để hiện giao diện trống
+                            if(document.querySelectorAll('.news-feed .post').length === 0) {
                                 location.reload();
                             }
-                        }, 300);
+                        }, 400);
+                    } else {
+                        alert(data.message);
                     }
-                });
+                })
+                .catch(err => console.error('Lỗi:', err));
             }
         }
         

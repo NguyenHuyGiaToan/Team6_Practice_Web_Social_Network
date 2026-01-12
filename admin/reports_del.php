@@ -5,12 +5,8 @@
 
     if (isset($_GET['ReportID'])) {
         $reportId = (int)$_GET['ReportID'];
-        $stmt = $conn->prepare("DELETE FROM Reports WHERE ReportID = ?");
-        if ($stmt) {
-            $stmt->bind_param('i', $reportId);
-            $stmt->execute();
-            $stmt->close();
-        }
+        $sql = "UPDATE Reports SET Status = 'rejected' WHERE ReportID = $reportId";
+        $conn->query($sql);
     }
 
     header("Location: reports.php");

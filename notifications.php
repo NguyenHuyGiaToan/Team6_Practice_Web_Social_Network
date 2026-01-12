@@ -183,7 +183,16 @@ $old_notifications = array_filter($notifications, fn($n) => $n['IsRead'] == 1);
                                 $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã bình luận bài viết của bạn.';
                                 break;
                             case 'Follow':
-                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã bắt đầu theo dõi bạn.';
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã gửi yêu cầu theo dõi bạn.';
+                                break;
+                            case 'AcceptFollow':
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã chấp nhận yêu cầu theo dõi của bạn.';
+                                break;
+                            case 'DeclineFollow':
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã từ chối yêu cầu theo dõi của bạn.';
+                                break;
+                             case 'Unfollow':
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã hủy theo dõi bạn.';
                                 break;
                             default:
                                 $message = htmlspecialchars($noti['Message']);
@@ -220,7 +229,16 @@ $old_notifications = array_filter($notifications, fn($n) => $n['IsRead'] == 1);
                                 $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã bình luận bài viết của bạn.';
                                 break;
                             case 'Follow':
-                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã bắt đầu theo dõi bạn.';
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã gửi yêu cầu theo dõi bạn.';
+                                break;
+                            case 'AcceptFollow':
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã chấp nhận yêu cầu theo dõi của bạn.';
+                                break;
+                            case 'DeclineFollow':
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã từ chối yêu cầu theo dõi của bạn.';
+                                break;
+                            case 'Unfollow':
+                                $message = '<strong>' . htmlspecialchars($noti['ActorName']) . '</strong> đã hủy theo dõi bạn.';
                                 break;
                             default:
                                 $message = htmlspecialchars($noti['Message']);
