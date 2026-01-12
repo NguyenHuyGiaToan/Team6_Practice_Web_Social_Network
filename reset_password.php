@@ -65,27 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $validToken) {
     <title>Đặt lại mật khẩu - TSix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* Copy CSS từ forgot_password.php vào đây để tiết kiệm dòng */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Mulish', sans-serif; }
-        body { height: 100vh; display: flex; background: #fff; overflow: hidden; }
-        .left-panel { width: 45%; background-color: #791a23; color: white; padding: 60px; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 100px; }
-        .left-panel h1 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
-        .right-panel { width: 55%; display: flex; flex-direction: column; align-items: center; padding: 20px 40px; height: 100vh; overflow-y: auto; }
-        .login-wrapper { width: 100%; max-width: 420px; margin: auto; }
-        .logo-area { text-align: center; margin-bottom: 20px; }
-        .logo-area img { height: 90px; width: auto; display: block; margin: 0 auto; object-fit: contain; }
-        .form-title { text-align: center; font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; color: #333; }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: #333; }
-        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; outline: none; }
-        .form-control:focus { border-color: #791a23; box-shadow: 0 0 0 1px #791a23; }
-        .btn-login { width: 100%; padding: 14px; background: #791a23; color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 700; cursor: pointer; }
-        .msg-box { padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 0.9rem; }
-        .msg-error { background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; }
-        .msg-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
-        @media (max-width: 900px) { .left-panel { display: none; } .right-panel { width: 100%; } }
-    </style>
+    <link rel="stylesheet" href="assets/Style-css/reset_password.css">
 </head>
 <body>
     <div class="left-panel">

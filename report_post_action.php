@@ -1,5 +1,5 @@
 <?php
-// report_action.php
+//report_action.php
 require_once __DIR__ . '../includes/config.php';
 require_once __DIR__ . '../includes/database.php';
 

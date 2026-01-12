@@ -25,11 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
             mysqli_stmt_bind_param($up_stmt, "si", $content, $post_id);
             mysqli_stmt_execute($up_stmt);
 
-            // 2. Xử lý XÓA ẢNH (Nếu trong Modal có chức năng chọn xóa ảnh cũ)
+            // 2. Xử lý XÓA ẢNH CŨ
             if (!empty($_POST['delete_images'])) {
                 foreach ($_POST['delete_images'] as $img_id) {
                     $img_id = intval($img_id);
-                    // Lấy tên file để xóa trong thư mục
                     $get_img = mysqli_query($conn, "SELECT ImageUrl FROM Post_Images WHERE ImageID = $img_id");
                     if ($img_row = mysqli_fetch_assoc($get_img)) {
                         $path = "../uploads/posts/" . $img_row['ImageUrl'];

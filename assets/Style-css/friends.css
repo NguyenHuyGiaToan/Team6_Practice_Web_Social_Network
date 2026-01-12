@@ -1,0 +1,133 @@
+ 
+        /* Layout riêng cho trang Friends */
+        .friends-container {
+            display: flex;
+            height: calc(100vh - 60px); /* Trừ chiều cao navbar */
+            background: #f0f2f5;
+            overflow: hidden;
+        }
+
+        /* Sidebar bên trái */
+        .friends-sidebar {
+            width: 360px;
+            background: #fff;
+            padding: 10px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        .friends-sidebar h2 { font-size: 1.5rem; margin: 10px 10px 20px; color: #8B1E29 }
+        .friends-sidebar a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 1.05rem; color: #050505;
+            transition: background 0.2s ease;
+        }
+        .sidebar-item span {
+            text-decoration: none !important; /* Đảm bảo không có gạch chân */
+            font-weight: 500;
+        }
+        .sidebar-item:hover { background: #8B1E29; }
+        .sidebar-item.active { background: #e7f3ff; color: #8B1E29; }
+        .sidebar-icon-circle {
+            width: 36px; height: 36px; background: #e4e6eb; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .active .sidebar-icon-circle { background: #8B1E29; color: white; }
+
+        /* Khu vực chính bên phải */
+        .friends-main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Section Header */
+        .section-header { margin-bottom: 20px; }
+        .section-header h3 { font-size: 1.25rem; font-weight: 700; color: #8B1E29 }
+
+        /* Grid Layout (Giống ảnh mẫu) */
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* Card User */
+        .friend-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Chuyển động mượt mà */
+            border: 1px solid #e4e6eb;
+        }
+
+        .friend-card:hover {
+            transform: translateY(-5px); /* Bay nhẹ lên trên */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15); /* Đổ bóng đậm hơn khi lướt qua */
+            border-color: #d8dadf;
+        }
+
+        .card-img {
+            width: 100%;
+            aspect-ratio: 1/1; /* Ảnh vuông */
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .card-body {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .card-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #050505;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .card-info {
+            font-size: 0.85rem;
+            color: #65676b;
+            margin-bottom: 12px;
+            flex: 1; /* Đẩy button xuống đáy */
+        }
+
+        /* Nút bấm */
+        .btn-stack { display: flex; flex-direction: column; gap: 8px; }
+        .btn {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+        .btn-primary { background: #e7f3ff; color: Gray; }
+        .btn-primary:hover { background: #8B1E29; }
+        
+        /* Nút Confirm đậm hơn */
+        .btn-confirm { background: #8B1E29; color: white; }
+        .btn-confirm:hover { background: #8B1E29; }
+
+        .btn-secondary { background: #e4e6eb; color: #050505; }
+        .btn-secondary:hover { background: #8B1E29; }
+        .btn-disabled { background: #f0f2f5; color: #bcc0c4; cursor: not-allowed; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .friends-sidebar { display: none; } /* Ẩn sidebar trên mobile */
+            .friends-main { padding: 15px; }
+            .friends-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+   

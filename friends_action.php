@@ -41,7 +41,6 @@ switch ($action) {
             
             if (mysqli_stmt_execute($stmt)) {
                 // createNotification($conn, Người nhận, Người gửi, Loại, ID tham chiếu, Tin nhắn)
-                // Trong trường hợp Follow, ReferenceID có thể để null
                 createNotification($conn, $target_id, $user_id, 'Follow', null);
 
                 $response = ['success' => true, 'text' => 'Đã gửi yêu cầu'];

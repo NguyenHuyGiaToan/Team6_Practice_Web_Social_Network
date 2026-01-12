@@ -33,7 +33,7 @@ switch ($action) {
                 FROM COMMENTS c 
                 JOIN Users u ON c.FK_UserID = u.UserID 
                 WHERE c.FK_PostID = ? AND c.Status = 'active' 
-                ORDER BY c.CreatedAt ASC"; // ASC: Cũ nhất hiện trước, Mới nhất hiện sau
+                ORDER BY c.CreatedAt ASC"; 
 
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "i", $post_id);

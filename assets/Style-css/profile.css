@@ -1,0 +1,292 @@
+ 
+        /* RESET & GLOBAL */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #f0f2f5; color: #050505; }
+
+        /* Container */
+        .container { max-width: 1095px; margin: 0 auto; padding: 0 16px; }
+
+        /* Profile Header */
+        .profile-header { background: #fff; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin: 20px 0; overflow: hidden; }
+
+        .cover-photo {
+            width: 100%; height: 350px;
+            background-size: cover; background-position: center;
+            position: relative;
+        }
+
+        .btn-update-cover {
+            position: absolute; bottom: 15px; right: 30px;
+            background: #fff; padding: 8px 12px; border-radius: 6px;
+            font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-update-cover:hover { background: #f0f2f5; }
+
+        .header-details { padding: 20px 16px 16px; position: relative; }
+
+        .header-top-row {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            padding-bottom: 20px; border-bottom: 1px solid #ced0d4;
+        }
+
+        .user-identity { display: flex; align-items: flex-end; gap: 20px; }
+
+        .avatar-container { margin-top: -80px; position: relative; z-index: 2; }
+        .big-avatar {
+            width: 168px; height: 168px; border-radius: 50%;
+            border: 4px solid #fff; object-fit: cover; background: #fff;
+        }
+
+        .btn-update-avatar {
+            position: absolute; bottom: 10px; right: 10px;
+            width: 36px; height: 36px; background: #e4e6eb; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid #fff;
+        }
+        .btn-update-avatar:hover { background: #d8dadf; }
+
+        .fullname { font-size: 2rem; font-weight: 800; margin-bottom: 4px; }
+        .stats-text { color: #65676b; font-size: 0.95rem; }
+        .stats-text b { color: #050505; font-weight: 600; }
+
+        .action-buttons { display: flex; gap: 8px; margin-top: 10px; }
+
+        .btn-blue {
+            background: #0866ff; color: white; border: none; border-radius: 6px;
+            padding: 0 16px; height: 36px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-blue:hover { background: #0055d4; }
+
+        .btn-gray {
+            background: #e4e6eb; color: #050505; border: none; border-radius: 6px;
+            padding: 0 16px; height: 36px; font-weight: 600; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-gray:hover { background: #d8dadf; }
+
+        .profile-menu {
+            display: flex; gap: 4px; padding: 8px 16px 0;
+        }
+        .menu-item {
+            padding: 12px 16px; font-weight: 600; color: #65676b; cursor: pointer; border-radius: 8px 8px 0 0;
+        }
+        .menu-item:hover { background: #f0f2f5; }
+        .menu-item.active { color: #0866ff; border-bottom: 3px solid #0866ff; }
+
+        /* --- CSS BỔ SUNG TỪ INDEX.PHP (MENU, MODAL, COMMENT) --- */
+        /* Menu Dropdown */
+        .post-header-right { position: relative; margin-left: auto; }
+        .post-menu-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; color: #65676b; transition: 0.2s; }
+        .post-menu-btn:hover { background-color: #f0f2f5; }
+        .post-options-menu { display: none; position: absolute; top: 35px; right: 0; width: 280px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); z-index: 10; padding: 8px; border: 1px solid #e4e6eb; text-align: left; }
+        .post-options-menu.show { display: block; }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; color: #050505; text-decoration: none; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .menu-item:hover { background-color: #f2f2f2; }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 90%; max-width: 500px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: fadeIn 0.2s ease-out; }
+        .modal-header { padding: 15px; border-bottom: 1px solid #e4e6eb; display: flex; justify-content: space-between; align-items: center; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 15px; }
+        .edit-textarea { width: 100%; min-height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: none; }
+        .btn-submit-modal { width: 100%; padding: 10px; margin-top: 15px; background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* Comments */
+        .comments-section { border-top: 1px solid #e4e6eb; padding-top: 12px; margin-top: 16px; display: none; }
+        .comment-item { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+        .comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+        .comment-bubble { background: #f0f2f5; padding: 8px 12px; border-radius: 18px; max-width: 85%; }
+        .comment-author { font-weight: 600; font-size: 0.9rem; color: #050505; }
+        .comment-content { font-size: 0.95rem; margin-top: 2px; }
+        .comment-meta { font-size: 0.8rem; color: #65676b; margin-top: 4px; margin-left: 12px;}
+        .comment-input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccd0d5; outline: none; }
+        /* Body */
+        .profile-body {
+            display: grid; grid-template-columns: 38% 60%; gap: 16px; margin-top: 20px; padding-bottom: 50px;
+        }
+
+        .card {
+            background: #fff; border-radius: 8px; padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px;
+        }
+        .card-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; }
+
+        .intro-item {
+            display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;
+            font-size: 0.95rem; color: #050505;
+        }
+        .intro-item i { color: #8c939d; width: 24px; font-size: 1.2rem; }
+
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-radius: 8px; overflow: hidden;
+        }
+        .photo-grid img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+
+        /* Tăng độ bo góc và độ đậm khối cho khung tổng thể */
+        .create-post { 
+            margin-bottom: 20px; 
+            background: #fff; 
+            border-radius: 15px; /* Bo tròn góc khung ngoài nhiều hơn */
+            padding: 15px; 
+            /* Tăng độ đậm khối bằng cách chỉnh thông số box-shadow */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        }
+
+        /* Căn chỉnh phần top */
+        .create-post-top { 
+            display: flex; 
+            align-items: center; /* Căn giữa ảnh và khung nhập theo chiều dọc */
+            gap: 12px; 
+            padding-bottom: 15px; 
+            margin-bottom: 12px; 
+            border-bottom: 1px solid #e4e6eb; 
+        }
+
+        .create-post-top img { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .create-post-top img:hover {
+            filter: brightness(0.9);
+        }
+        /* Điều chỉnh khung "Bạn đang nghĩ gì" */
+        .input-mind-trigger { 
+            flex: 1; 
+            padding: 12px 20px; 
+            background: #f0f2f5; 
+            border-radius: 25px; /* Bo tròn mạnh hai đầu */
+            cursor: pointer; 
+            font-size: 1rem; 
+            color: gray;
+            font-weight: bold;
+            display: flex;
+            align-items: center; 
+            transition: background 0.2s;
+        }
+
+        .input-mind-trigger:hover {
+            background: #8B1E29; /* Hiệu ứng hover cho khung nhập */
+        }
+        
+        /* Các nút hành động (Ảnh, Cảm xúc) */
+        .post-actions { 
+            display: flex; 
+            justify-content: space-around; 
+        }
+
+        .action-btn { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            padding: 10px 20px; 
+            color: #65676b; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover { 
+            background: #8B1E29; 
+        }
+
+        .post { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .poster-info { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+        .poster-name { font-weight: 600; }
+        .post-meta { font-size: 0.8rem; color: #65676b; }
+        .post-caption { margin-bottom: 12px; font-size: 0.95rem; }
+        .post-img { width: 100%; border-radius: 8px; margin: 12px 0; }
+        .post-stats { display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #e4e6eb; border-bottom: 1px solid #e4e6eb; color: #65676b; }
+
+        @media (max-width: 900px) {
+            .profile-body { grid-template-columns: 1fr; }
+            .header-top-row { flex-direction: column; align-items: center; text-align: center; }
+            .user-identity { flex-direction: column; gap: 10px; }
+            .avatar-container { margin-top: -100px; }
+            .action-buttons { width: 100%; justify-content: center; }
+        }
+        /* Container cho tab nội dung */
+        .tab-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin-top: 16px;
+        }
+
+        /* Grid danh sách bạn bè */
+        #tab-friends .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 10px;
+        }
+
+        /* Thẻ bạn bè kiểu mới */
+        .friend-card-mini {
+            display: flex;
+            flex-direction: column; /* Chuyển thành cột để giống ảnh mẫu */
+            background: #fff;
+            border: 1px solid #e4e6eb;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .friend-card-mini:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .friend-card-mini img {
+            width: 100%;
+            aspect-ratio: 1/1; /* Ảnh vuông */
+            object-fit: cover;
+            border-radius: 0; /* Bỏ bo tròn cũ */
+        }
+
+        .friend-info-box {
+            padding: 12px;
+            text-align: left;
+        }
+
+        .friend-info-box .name {
+            display: block;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+
+        .friend-info-box .meta {
+            font-size: 0.85rem;
+            color: #65676b;
+            margin-bottom: 12px;
+        }
+
+        .btn-friend-action {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+
+        .btn-view-profile { background: #e7f3ff; color: #1877f2; }
+        .btn-unfollow { background: #e4e6eb; color: #050505; }
+        .form-group { margin-bottom: 15px; margin-top: 10px; }
+        .form-group label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 5px; color: #65676b; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+        .btn-submit-about { 
+            background: #1877f2; color: white; border: none; padding: 10px 20px; 
+            border-radius: 6px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px;
+        }
+        .btn-submit-about:hover { background: #166fe5; }
+    

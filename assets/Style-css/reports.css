@@ -67,7 +67,7 @@
 .done { color: #22c55e; }
 .deleted { color: #ef4444; }
 
-/* FILTER */
+
 .filter {
     display: flex;
     gap: 12px;

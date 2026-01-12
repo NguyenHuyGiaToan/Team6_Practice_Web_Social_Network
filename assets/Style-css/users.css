@@ -122,7 +122,7 @@
     gap: 8px;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
     .card {
         margin: 0 15px 15px 15px;

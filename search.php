@@ -151,79 +151,8 @@ if (!empty($keyword)) {
     <meta charset="UTF-8">
     <title>Tìm kiếm: <?php echo htmlspecialchars($keyword); ?> - TSix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        /* CSS CHUẨN */
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background:#f0f2f5; color:#1c1e21; }
-        a { text-decoration: none; color: inherit; }
-        
-        .container { max-width:1200px; margin:0 auto; padding:0 20px; }
-        .main-layout { display:grid; grid-template-columns:280px 1fr 320px; gap:20px; margin-top:20px; }
-
-        /* Navbar */
-        .navbar { background: #fff; height: 60px; padding: 0 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .nav-left { flex: 1; display: flex; align-items: center; }
-        .logo img { height: 40px; width: auto; }
-        .nav-center { flex: 2; display: flex; justify-content: center; }
-        .search-box { background: #f0f2f5; padding: 8px 15px; border-radius: 50px; width: 100%; max-width: 600px; display: flex; align-items: center; }
-        .search-box input { background: transparent; border: none; outline: none; margin-left: 10px; width: 100%; font-size: 0.95rem; }
-        .nav-right { flex: 1; display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
-        .nav-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-
-        /* Sidebar */
-        .left-sidebar { background:#fff; border-radius:8px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 80px; }
-        .user-card { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
-        .menu-item { display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; cursor:pointer; margin:4px 0; color: #65676b; font-weight: 500; }
-        .menu-item:hover { background:#f0f2f5; }
-        .menu-item.active { background:#e7f3ff; color:#8B1E29; font-weight:600; }
-        .menu-item i { width:24px; font-size:1.2rem; }
-
-        /* Content */
-        .search-content { width: 100%; max-width: 800px; margin: 0 auto; }
-        
-        /* Tabs */
-        .search-tabs { display: flex; background: #fff; padding: 0 20px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .tab-item { padding: 15px 20px; font-weight: 600; color: #65676b; cursor: pointer; border-bottom: 3px solid transparent; text-decoration: none; display: block; }
-        .tab-item:hover { background: #f2f2f2; }
-        .tab-item.active { color: #8B1E29; border-bottom-color: #8B1E29; }
-
-        /* Filter Bar */
-        .filter-bar { background: #fff; padding: 12px 20px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
-        .filter-group { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #65676b; font-weight: 600; }
-        .filter-select { padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd; background: #f0f2f5; outline: none; cursor: pointer; font-size: 0.9rem; }
-
-        /* Result Items */
-        .result-title { font-weight: 700; color: #65676b; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        .user-result-card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-        .ur-left { display: flex; align-items: center; gap: 15px; }
-        .ur-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
-        .ur-name { font-weight: 700; font-size: 1rem; color: #050505; }
-        .ur-bio { font-size: 0.85rem; color: #65676b; margin-top: 3px; }
-        
-        .btn-connect { border: 1px solid #ccd0d5; background: #fff; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
-        .btn-connect:hover { background: #f0f2f5; }
-        .btn-connect.following { background: #e7f3ff; color: #1877f2; border: none; }
-
-        .post { background:#fff; border-radius:8px; padding:16px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,0.1); }
-        .p-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
-        .p-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; }
-        .p-content { margin-bottom:12px; line-height:1.5; font-size:0.95rem; }
-        .p-image { width: 100%; border-radius: 8px; margin-bottom: 10px; max-height: 400px; object-fit: cover; }
-        .p-actions { display:flex; justify-content:space-between; border-top:1px solid #eee; padding-top:8px; }
-        .act-btn { flex: 1; text-align: center; padding: 8px; border-radius: 5px; cursor: pointer; color: #65676b; font-weight: 600; }
-        .act-btn:hover { background: #f0f2f5; }
-
-        /* [MỚI] CSS Highlight & Pagination */
-        mark { background-color: #fff2a8; padding: 0 2px; border-radius: 2px; color: inherit; }
-        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 20px; margin-bottom: 40px; }
-        .page-btn { padding: 8px 15px; border-radius: 6px; border: 1px solid #ddd; background: #fff; color: #65676b; font-weight: 600; text-decoration: none; }
-        .page-btn:hover { background: #f0f2f5; }
-        .page-btn.active { background: #8B1E29; color: #fff; border-color: #8B1E29; }
-        .page-btn.disabled { opacity: 0.5; pointer-events: none; }
-
-        @media (max-width: 1100px) { .main-layout { grid-template-columns: 280px 1fr; } }
-        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } .left-sidebar { display: none; } .nav-center { display: none; } }
-    </style>
+    
+    <link rel="stylesheet" href="assets/Style-css/search.css">
 </head>
 <body>
 

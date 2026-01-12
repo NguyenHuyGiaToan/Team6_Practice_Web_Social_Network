@@ -1,0 +1,116 @@
+/* CSS RESET */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Mulish', sans-serif; }
+        body { height: 100vh; display: flex; background: #fff; overflow: hidden; }
+
+        /* --- CỘT TRÁI (ĐỎ) --- */
+        .left-panel {
+            width: 45%; 
+            background-color: #791a23; 
+            color: white;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; 
+            padding-bottom: 100px; 
+        }
+        
+      
+
+        .left-panel h1 { font-size: 2.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 20px; }
+        .left-panel p { font-size: 1rem; line-height: 1.6; opacity: 0.9; }
+
+        /* --- CỘT PHẢI (TRẮNG) - ĐÃ SỬA --- */
+        .right-panel {
+            width: 55%;
+            display: flex;
+            flex-direction: column; /* Xếp dọc */
+            /* Bỏ justify-content: center để tránh lỗi overlap */
+            align-items: center;
+            padding: 20px 40px; /* Thêm padding trên dưới */
+            height: 100vh;
+            overflow-y: auto; /* Cho phép cuộn nếu màn hình quá nhỏ */
+        }
+
+        /* Wrapper form: Tự động căn giữa dọc bằng margin auto */
+        .login-wrapper { 
+            width: 100%; 
+            max-width: 420px; 
+            margin-top: auto;    /* Đẩy xuống dưới */
+            margin-bottom: auto; /* Đẩy lên trên -> Kết quả: Nằm giữa */
+        }
+
+        /* --- LOGO --- */
+        .logo-area { text-align: center; margin-bottom: 20px; }
+        .logo-area img { height: 90px; width: auto; display: block; margin: 0 auto; object-fit: contain; }
+        
+        .form-title { text-align: center; font-size: 1.5rem; font-weight: 700; margin-bottom: 30px; color: #333; }
+
+        /* --- INPUTS --- */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; color: #333; }
+        .form-label span { color: #d32f2f; }
+
+        .form-control {
+            width: 100%; padding: 12px 15px;
+            border: 1px solid #ddd; border-radius: 6px; 
+            font-size: 1rem; outline: none; transition: 0.2s;
+        }
+        .form-control:focus { border-color: #791a23; box-shadow: 0 0 0 1px #791a23; }
+        .form-control:invalid { border-color: #ddd; } 
+        
+        .password-wrap { position: relative; }
+        .toggle-pass { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999; }
+
+        /* --- OPTIONS --- */
+        .options-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; font-size: 0.85rem; }
+        .remember-label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #555; }
+        .remember-label input { accent-color: #791a23; width: 16px; height: 16px; }
+        .forgot-link { color: #666; text-decoration: none; }
+        .forgot-link:hover { text-decoration: underline; }
+
+        /* --- BUTTONS --- */
+        .btn-login {
+            width: 100%; padding: 14px;
+            background: #f3f4f6; color: #9ca3af; 
+            border: none; border-radius: 6px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .btn-login:hover { background: #e5e7eb; color: #6b7280; }
+
+        .divider { text-align: center; color: #aaa; font-size: 0.8rem; margin: 30px 0 20px 0; position: relative; }
+        .divider::before, .divider::after { content: ""; position: absolute; top: 50%; width: 35%; height: 1px; background: #eee; }
+        .divider::before { left: 0; } .divider::after { right: 0; }
+
+        .social-row { display: flex; gap: 15px; margin-bottom: 30px; }
+        .btn-social {
+            flex: 1; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: white;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            font-weight: 600; cursor: pointer; color: #333; transition: 0.2s; font-size: 0.9rem;
+        }
+        .btn-social:hover { background: #f9f9f9; border-color: #ccc; }
+        .btn-social img { width: 18px; height: 18px; }
+
+        /* --- FOOTER & COPYRIGHT (ĐÃ FIX) --- */
+        .auth-footer { text-align: center; font-size: 0.85rem; color: #999; }
+        .auth-footer a { color: #b91c1c; font-weight: 700; text-decoration: none; }
+
+        /* Fix lỗi: Bỏ absolute, dùng margin để đẩy khoảng cách */
+        .copyright { 
+            text-align: center; 
+            font-size: 0.75rem; 
+            color: #ccc; 
+            margin-top: 40px; /* Cách form 40px */
+            flex-shrink: 0;   /* Không bị co lại */
+            width: 100%;
+        }
+
+        .error-msg {
+            color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 6px; 
+            margin-bottom: 20px; text-align: center; font-size: 0.9rem; 
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; }
+        }

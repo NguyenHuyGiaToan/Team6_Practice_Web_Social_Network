@@ -1,5 +1,5 @@
 <?php
-// actions/delete_post_action.php
+// deleted_post_action.php
 require_once __DIR__ . '../includes/config.php';
 require_once __DIR__ . '../includes/database.php';
 
@@ -12,7 +12,7 @@ $user_id = $_SESSION['user_id'];
 $post_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($post_id > 0) {
-    // Kiểm tra quyền: Chỉ chủ bài viết mới được xóa
+    // Kiểm tra quyền sở hữu.
     $check_sql = "SELECT FK_UserID FROM POSTS WHERE PostID = ?";
     $stmt = mysqli_prepare($conn, $check_sql);
     mysqli_stmt_bind_param($stmt, "i", $post_id);

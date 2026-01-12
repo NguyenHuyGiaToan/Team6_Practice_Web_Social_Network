@@ -14,7 +14,7 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// 3. Xóa Cookie "Ghi nhớ đăng nhập" (Quan trọng)
+// 3. Xóa Cookie "Ghi nhớ đăng nhập"
 // Phải set thời gian về quá khứ (time() - 3600) để trình duyệt xóa nó ngay lập tức
 if (isset($_COOKIE['user_login'])) {
     setcookie('user_login', '', time() - 3600, "/");

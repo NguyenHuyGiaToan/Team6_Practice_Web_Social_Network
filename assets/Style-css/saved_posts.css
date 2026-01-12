@@ -1,0 +1,179 @@
+
+        /* Bố cục chính */      
+        .main-layout {
+            display: grid;
+            grid-template-columns: 800px 1fr 20px; 
+            gap: 25px; 
+            margin: 20px auto;
+            max-width: 1100px;
+            align-items: start;
+            justify-content: center;
+        }
+
+        /* Nâng cấp News Feed (Khung chứa bài viết) */
+        .news-feed {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-height: 70vh; 
+            max-width: 680px;
+            border: #8B1E29 1px solid;
+        }
+
+        /* Header khu vực bài viết đã lưu */
+        .feed-header {
+            border-bottom: 1px solid #8B1E29;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .feed-header h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1c1e21;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feed-header h2 i {
+            color: #8B1E29; 
+        }
+
+        .feed-header p {
+            color: #65676b;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Container chính cho bài viết */
+       .post {
+            background: #fff;
+            border: 1px solid #dddfe2;
+            border-radius: 8px;
+            width: 600px;
+            padding: 12px 0 0 0;
+            margin-bottom: 16px;
+            /* Hiệu ứng mượt mà khi ẩn bài viết */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        /* Header bài viết */
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 12px 12px 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* FIX LỖI AVATAR QUÁ TO */
+        .post-avatar {
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .post-user h4 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .post-user .time {
+            font-size: 13px;
+            color: #65676b;
+        }
+
+        /* Nội dung văn bản */
+        .post-content {
+            padding: 0 12px 12px 12px;
+            font-size: 15px;
+        }
+
+        /* Ảnh bài viết tràn viền */
+        .post-images {
+            width: 100%;
+            border-top: 1px solid #ebedf0;
+            border-bottom: 1px solid #ebedf0;
+        }
+
+        .post-images img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Thống kê Like/Comment */
+        .post-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-bottom: 1px solid #ebedf0;
+            font-size: 14px;
+            color: #65676B;
+        }
+
+        /* Nút tương tác */
+        .post-actions-row {
+            display: flex;
+            padding: 4px 12px;
+        }
+
+        .post-action-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 8px;
+            color: #65676b;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .post-action-btn:hover {
+            background: #f2f2f2;
+            border-radius: 4px;
+        }
+
+        .saved-badge-top {
+            color: #65676b;
+            font-size: 13px;
+        }
+    
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .empty-icon-container {
+            width: 120px;
+            height: 120px;
+            background: #f0f2f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: #bcc0c4;
+        }

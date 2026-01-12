@@ -1,5 +1,5 @@
 <?php
-// saved_post_action.php
+//saved_post_action.php
 require_once __DIR__ . '../includes/config.php';
 require_once __DIR__ . '../includes/database.php';
 

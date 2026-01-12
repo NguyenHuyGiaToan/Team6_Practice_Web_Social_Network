@@ -6,7 +6,7 @@ Dự án được tổ chức theo cấu trúc module để tránh xung đột:
 
 /admin: Chứa các tính năng dành cho quản trị viên (Thanh Ngọc, Trọng Minh).
 
-/assets: Tài nguyên tĩnh gồm /css, /js, và /images.
+/assets: Tài nguyên tĩnh gồm /css và /images.
 
 /includes: Chứa các file logic dùng chung (config.php, db.php, functions.php).
 
