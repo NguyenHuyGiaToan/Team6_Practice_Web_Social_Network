@@ -28,9 +28,9 @@ $admin_avatar = $_SESSION['user_avatar'] ?? '../uploads/avatars/default_admin_av
 
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - TSix</title>
-    <link rel="stylesheet" href="/web-social-network/assets/Style-css/admin_layout.css">
-    <link rel="stylesheet" href="/web-social-network/assets/Style-css/reports.css">
+    <title>Admin Reports Management - TSix</title>
+    <link rel="stylesheet" href="../assets/Style-css/admin_layout.css">
+    <link rel="stylesheet" href="../assets/Style-css/reports.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
