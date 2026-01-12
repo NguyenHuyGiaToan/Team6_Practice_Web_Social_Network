@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $mail->Host       = 'smtp.gmail.com';                     
                     $mail->SMTPAuth   = true;                                   
                     $mail->Username   = 'tsix.social.network@gmail.com'; // Tài khoản Gmail gửi
-                    $mail->Password   = 'dkva shvj sxdp zyll';                   // Mật khẩu ứng dụng Gmail
+                    $mail->Password   = 'dzes lpok maws zlrx';                   // Mật khẩu ứng dụng Gmail
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            
                     $mail->Port       = 465;                                    
                     $mail->CharSet    = 'utf8';
