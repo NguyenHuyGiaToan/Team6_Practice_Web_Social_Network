@@ -58,18 +58,19 @@ if (!empty($keyword)) {
     $search_term = "%" . $keyword . "%";
 
     // --- 1. TÌM KIẾM NGƯỜI DÙNG ---
-    if ($tab == 'all' || $tab == 'people') {
-        $sql = "SELECT u.*, 
-                (SELECT COUNT(*) FROM FOLLOWS WHERE FK_FollowerID = ? AND FK_FollowingID = u.UserID) as is_following
-                FROM Users u
-                WHERE u.FullName LIKE ? 
-                AND u.UserID != ? 
-                AND u.Role = 'user'
-                LIMIT 5"; // Giới hạn user hiển thị ít thôi
-        
-        $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "isi", $user_id, $search_term, $user_id);
-        mysqli_stmt_execute($stmt);
+   if ($tab == 'all' || $tab == 'people') {
+    $sql = "SELECT u.*, 
+            (SELECT Status FROM FOLLOWS WHERE FK_FollowerID = ? AND FK_FollowingID = u.UserID) as follow_status
+            FROM Users u
+            WHERE (u.FullName LIKE ? OR u.Email LIKE ?)
+            AND u.UserID != ? 
+            AND u.Role = 'user'
+            AND u.Status = 'active'
+            LIMIT 5"; 
+    
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "issi", $user_id, $search_term, $search_term, $user_id);
+    mysqli_stmt_execute($stmt);
         $res = mysqli_stmt_get_result($stmt);
         while ($row = mysqli_fetch_assoc($res)) {
             $row['avatar_url'] = getAvatarUrl($row['Avatar'], $row['FullName']);
@@ -307,7 +308,7 @@ if (!empty($keyword)) {
                     <?php if (($tab == 'all' || $tab == 'people') && !empty($user_results)): ?>
                         <div class="result-title">Mọi người</div>
                         <?php foreach ($user_results as $u): ?>
-                        <div class="user-result-card">
+                        <div class="user-result-card" id="user-card-<?php echo $u['UserID']; ?>">
                             <div class="ur-left">
                                 <a href="profile.php?id=<?php echo $u['UserID']; ?>">
                                     <img src="<?php echo $u['avatar_url']; ?>" class="ur-avatar">
@@ -316,17 +317,27 @@ if (!empty($keyword)) {
                                     <a href="profile.php?id=<?php echo $u['UserID']; ?>" class="ur-name">
                                         <?php echo highlightKeyword($u['FullName'], $keyword); ?>
                                     </a>
-                                    <div class="ur-bio"><?php echo !empty($u['Bio']) ? htmlspecialchars($u['Bio']) : 'Trường Đại học Ngân hàng TPHCM'; ?></div>
+                                    <div class="ur-bio"><?php echo !empty($u['Bio']) ? htmlspecialchars($u['Bio']) : 'Nothing'; ?></div>
                                 </div>
                             </div>
-                            <button class="btn-connect <?php echo $u['is_following'] ? 'following' : ''; ?>" 
-                                    onclick="toggleFollow(this, <?php echo $u['UserID']; ?>)">
-                                <?php if ($u['is_following']): ?>
-                                    <i class="fa-solid fa-check"></i> Đang theo dõi
+
+                            <div class="action-box">
+                                <?php if ($u['follow_status'] === 'accepted'): ?>
+                                    <button class="btn-connect following" 
+                                            onclick="handleFollowAction(this, <?php echo $u['UserID']; ?>, 'unfollow')">
+                                        <i class="fa-solid fa-user-minus"></i> Hủy theo dõi
+                                    </button>
+                                <?php elseif ($u['follow_status'] === 'pending'): ?>
+                                    <button class="btn-connect" style="background: #f0f2f5; color: #65676b; cursor: default;" disabled>
+                                        <i class="fa-solid fa-clock"></i> Đã gửi yêu cầu
+                                    </button>
                                 <?php else: ?>
-                                    <i class="fa-solid fa-plus"></i> Theo dõi
+                                    <button class="btn-connect" 
+                                            onclick="handleFollowAction(this, <?php echo $u['UserID']; ?>, 'send_request')">
+                                        <i class="fa-solid fa-plus"></i> Theo dõi
+                                    </button>
                                 <?php endif; ?>
-                            </button>
+                            </div>
                         </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -351,7 +362,6 @@ if (!empty($keyword)) {
                             <div class="p-actions">
                                 <div class="act-btn <?php echo $p['is_liked'] ? 'liked' : ''; ?>"><i class="fa-regular fa-thumbs-up"></i> Thích (<?php echo $p['total_likes']; ?>)</div>
                                 <div class="act-btn"><i class="fa-regular fa-comment"></i> Bình luận</div>
-                                <div class="act-btn"><i class="fa-solid fa-share"></i> Chia sẻ</div>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -393,37 +403,54 @@ if (!empty($keyword)) {
     </div>
 
     <script>
-        function toggleFollow(btn, userId) {
-            const isFollowing = btn.classList.contains('following');
-            const action = isFollowing ? 'unfollow' : 'follow';
+            function handleFollowAction(btn, targetId, action) {
+                if (btn.disabled) return;
+                
+                // Khóa nút và hiển thị hiệu ứng chờ
+                btn.disabled = true;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>...';
 
-            fetch('interaction_handler.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `action=${action}&target_id=${userId}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    if (action === 'follow') {
-                        btn.classList.add('following');
-                        btn.innerHTML = '<i class="fa-solid fa-check"></i> Đang theo dõi';
-                        btn.style.background = '#e7f3ff';
-                        btn.style.color = '#1877f2';
-                        btn.style.border = 'none';
+                // Dùng URLSearchParams để gửi dữ liệu chuẩn
+                const formData = new URLSearchParams();
+                formData.append('target_id', targetId);
+                formData.append('action', action);
+
+                fetch('friends_action.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (action === 'send_request') {
+                            // Chuyển sang trạng thái chờ
+                            btn.style.background = '#f0f2f5';
+                            btn.style.color = '#65676b';
+                            btn.innerHTML = '<i class="fa-solid fa-clock"></i> Đã gửi yêu cầu';
+                            btn.onclick = null; 
+                        } else if (action === 'unfollow') {
+                            // Chuyển về trạng thái Theo dõi ban đầu
+                            btn.disabled = false;
+                            btn.className = 'btn-connect';
+                            btn.innerHTML = '<i class="fa-solid fa-plus"></i> Theo dõi';
+                            // Gán lại sự kiện send_request
+                            btn.onclick = function() { handleFollowAction(this, targetId, 'send_request'); };
+                        }
                     } else {
-                        btn.classList.remove('following');
-                        btn.innerHTML = '<i class="fa-solid fa-plus"></i> Theo dõi';
-                        btn.style.background = '#fff';
-                        btn.style.color = '#050505';
-                        btn.style.border = '1px solid #ccd0d5';
+                        alert(data.message);
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
                     }
-                } else {
-                    alert(data.message || 'Lỗi xử lý');
-                }
-            })
-            .catch(err => console.error(err));
-        }
+                })
+                .catch(err => {
+                    console.error("Lỗi:", err);
+                    alert("Có lỗi xảy ra trong quá trình gửi dữ liệu.");
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                });
+            }
     </script>
 
 </body>

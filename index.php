@@ -469,6 +469,14 @@ while ($friend = mysqli_fetch_assoc($friends_result)) {
             outline: none;
             margin-top: 8px;
         }
+        .comment-stats-trigger {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .comment-stats-trigger:hover {
+            text-decoration: underline;
+            color: #1c1e21; /* Hoặc màu đen đậm hơn */
+        }
     </style>
 </head>
 <body>
@@ -863,6 +871,42 @@ function renderComment(c) {
             </div>` : ''}
         </div>
     </div>`;
+}
+
+function handleFollowSidebar(userId) {
+    const btn = document.getElementById('follow-btn-sidebar-' + userId);
+    if (!btn || btn.disabled) return;
+
+    // 1. Khóa nút ngay lập tức để chống click đúp
+    btn.disabled = true;
+    const originalText = btn.innerText;
+    btn.innerText = '...';
+
+    // 2. Gửi yêu cầu đến friends_action.php
+    fetch('friends_action.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `target_id=${userId}&action=send_request`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Thay đổi giao diện nút thành công
+            btn.innerText = 'Đã gửi yêu cầu';
+            btn.style.background = '#e4e6eb';
+            btn.style.color = '#65676b';
+            btn.onclick = null; // Chặn bấm lại hoàn toàn
+        } else {
+            alert(data.message);
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    })
+    .catch(err => {
+        console.error('Lỗi:', err);
+        btn.disabled = false;
+        btn.innerText = originalText;
+    });
 }
 
 // Các hàm còn lại (nếu dùng)

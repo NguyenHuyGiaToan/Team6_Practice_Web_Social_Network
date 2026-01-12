@@ -66,7 +66,7 @@ $admin_avatar = $_SESSION['user_avatar'] ?? __DIR__ . '/uploads/avatars/default_
                 <div class="topbar-right">
                     <input type="text" placeholder="Tìm kiếm...">
                     <i class="fa-regular fa-bell"></i>
-                    <a href="profile.php" style="cursor:pointer; display: grid; grid-template-columns: auto auto; align-items: center; gap: 8px;">
+                    <a href="../profile.php" style="cursor:pointer; display: grid; grid-template-columns: auto auto; align-items: center; gap: 8px;">
                         <img width="30px" height="30px" src="../uploads/avatars/<?= $admin_avatar ?>" class="avatar" alt="">
                         <span style="font-weight: 600;"><?php echo htmlspecialchars($admin_name); ?></span>
                     </a>

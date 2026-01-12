@@ -131,14 +131,17 @@ th,td {
     font-size: 12px;
 }
 
+
 .reporter-content p:nth-child(2) {
     color: #2464D2;
     font-weight: 500;
     display: -webkit-box;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: 300px;
 }
 .reporter-content p:nth-child(3) {
     color: lightgrey;

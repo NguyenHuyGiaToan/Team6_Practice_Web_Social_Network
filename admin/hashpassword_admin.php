@@ -1,10 +1,2 @@
 <?php echo password_hash("user123@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user124@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user125@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user126@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user127@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user128@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user129@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user121@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user122@", PASSWORD_DEFAULT);?> <br>
-<?php echo password_hash("user111@", PASSWORD_DEFAULT);?> <br>
+
